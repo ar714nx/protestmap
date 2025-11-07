@@ -1,74 +1,39 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>D-CHOWK FULL COLOR PULSE</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<script src="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.umd.js"></script>
-<link href="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.css" rel="stylesheet"/>
-<style>
-  body{margin:0;background:#000;color:#fff;font-family:Arial}
-  #map{height:100vh;width:100%}
-  .panel{position:fixed;top:10px;left:10px;z-index:1000;background:rgba(0,0,0,0.9);padding:15px;border-radius:15px}
-  button{margin:8px;padding:12px 20px;font-size:18px;border:none;border-radius:12px;cursor:pointer;font-weight:bold}
-  .green{background:#0f0;color:#000} .red{background:#f00} .gray{background:#444} .aqua{background:#0ff;color:#000}
-
-  /* FULL COLOR BALLS — NO WHITE BORDER */
-  .ball-green{
-    width:38px;height:38px;border-radius:50%;
-    background:#0f0;box-shadow:0 0 30px #0f0, 0 0 60px #0f0;
-    animation:pulseGreen 1.5s infinite;
-  }
-  .ball-red{
-    width:38px;height:38px;border-radius:50%;
-    background:#f00;box-shadow:0 0 30px #f00, 0 0 60px #f00;
-    animation:pulseRed 1.5s infinite;
-  }
-  @keyframes pulseGreen{
-    0%,100%{box-shadow:0 0 30px #0f0, 0 0 60px #0f0}
-    50%{box-shadow:0 0 50px #0f0, 0 0 90px #0f0}
-  }
-  @keyframes pulseRed{
-    0%,100%{box-shadow:0 0 30px #f00, 0 0 60px #f00}
-    50%{box-shadow:0 0 50px #f00, 0 0 90px #f00}
-  }
-
-  #status{position:fixed;bottom:15px;left:15px;background:rgba(0,0,0,0.8);padding:12px;border-radius:12px;font-size:16px}
-  #legend{position:fixed;top:170px;right:15px;z-index:1000;background:rgba(0,0,0,0.9);padding:16px 20px;border-radius:16px;border:3px solid #0ff;box-shadow:0 0 30px #0ff;font-size:16px;font-weight:bold;line-height:2.2;backdrop-filter:blur(8px)}
-  .leg-ball{display:inline-block;width:22px;height:22px;border-radius:50%;margin-right:12px;vertical-align:middle;box-shadow:0 0 18px;border:2px solid #fff}
-
-  #searchBox{
-    position:fixed;top:10px;left:50%;transform:translateX(-50%);
-    z-index:1000;background:rgba(0,0,0,0.9);padding:12px 20px;
-    border-radius:30px;border:3px solid #0ff;box-shadow:0 0 20px #0ff;
-    font-size:18px;font-weight:bold;width:340px;text-align:center;
-    backdrop-filter:blur(8px);
-  }
-  #searchBox input{background:transparent;border:none;outline:none;color:#fff;width:260px;font-size:18px;}
-  #searchBox button{background:#0ff;color:#000;padding:8px 16px;border-radius:20px;margin-left:8px;}
-</style></head><body>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>AZADI WAR MAP - SAVE FIXED</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.umd.js"></script>
+  <link href="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.css" rel="stylesheet"/>
+  <style>
+    body{margin:0;background:#000;color:#fff;font-family:Arial;overflow:hidden}
+    #map{width:100vw;height:100vh}
+    .panel{position:fixed;top:10px;left:10px;z-index:1000;background:rgba(0,0,0,0.9);padding:15px;border-radius:15px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{padding:14px 20px;border:none;border-radius:12px;font-weight:bold;font-size:16px;cursor:pointer}
+    .green{background:#0f0;color:#000}.red{background:#f00}.gray{background:#444}.aqua{background:#0ff;color:#000}
+    .save{background:#0f0;color:#000;grid-column:1/3}
+    #status{position:fixed;bottom:15px;left:15px;background:rgba(0,0,0,0.8);padding:12px 20px;border-radius:12px;font-size:16px}
+    .ball{width:38px;height:38px;border-radius:50%;box-shadow:0 0 40px;animation:pulse 1.5s infinite}
+    @keyframes pulse{50%{box-shadow:0 0 70px}}
+    .g{background:#0f0;box-shadow:0 0 40px #0f0}.r{background:#f00;box-shadow:0 0 40px #f00}
+  </style>
+</head>
+<body>
 
 <div id="map"></div>
 
-<div id="searchBox">
-  <input type="text" placeholder="Lahore, Islamabad..." id="query">
-  <button onclick="geocode()">GO</button>
-</div>
-
 <div class="panel">
-  <button class="green" id="spamG">+ GREEN</button>
-  <button class="red" id="spamR">+ RED</button>
-  <button class="gray" id="del">Delete</button>
-  <button class="gray" id="move">Move OFF</button><br>
-  <button class="aqua" id="dchowkBtn">SHOW D-CHOWK</button>
-  <button class="gray" id="save">Save</button>
-  <button class="gray" id="load">Load</button>
-  <button class="gray" id="clear">Clear ALL</button>
+  <button class="green" id="addG">+ GREEN</button>
+  <button class="red" id="addR">+ RED</button>
+  <button class="gray" id="del">DELETE</button>
+  <button class="gray" id="move">MOVE OFF</button>
+  <button class="aqua" id="dchowk">SHOW D-CHOWK</button>
+  <button class="save" id="save">SAVE MAP</button>
+  <button class="gray" id="clear">CLEAR ALL</button>
 </div>
 
-<div id="status">GREEN = GREEN PULSE | RED = RED PULSE | NO WHITE</div>
-<div id="legend">
-  <div><span class="leg-ball" style="background:#0f0"></span> PTI Group</div>
-  <div><span class="leg-ball" style="background:#f00"></span> Police Group</div>
-  <div><span class="leg-ball" style="background:#ff8400"></span> CLASH ZONE</div>
-  <div><span class="leg-ball" style="background:#0ff"></span> D-CHOWK ZONE</div>
-</div>
+<div id="status">SAVE FIXED — YOUR BALLS ARE SAFE</div>
 
 <script>
 maptilersdk.config.apiKey = 'DBC5HbIkYq5Exj1DeUXm';
@@ -79,170 +44,127 @@ const map = new maptilersdk.Map({
   zoom: 16
 });
 
-/* RED BORDER */
-map.on('load', () => {
-  const ict = {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[72.855,33.495],[73.255,33.495],[73.255,33.815],[72.855,33.815],[72.855,33.495]]]}};
-  map.addSource('ict', {type: 'geojson', data: ict});
-  map.addLayer({id: 'border', type: 'line', source: 'ict', paint: {'line-color': '#f00', 'line-width': 9}});
-});
+let balls = [];
+let mode = null;
+let dVisible = false;
 
-/* 20% ZONES */
+// D-CHOWK
+const dchowk = {"type":"Feature","properties":{"name":"D-CHOWK"},"geometry":{"type":"Polygon","coordinates":[[[73.0900,33.7315],[73.0915,33.7318],[73.0928,33.7319],[73.0942,33.7317],[73.0958,33.7312],[73.0965,33.7305],[73.0968,33.7295],[73.0965,33.7285],[73.0958,33.7278],[73.0945,33.7273],[73.0928,33.7271],[73.0912,33.7272],[73.0900,33.7275],[73.0895,33.7282],[73.0893,33.7290],[73.0895,33.7300],[73.0898,33.7308],[73.0900,33.7315]]]}};
+
 map.on('load', () => {
+  // RED BORDER
+  map.addSource('ict', {type:'geojson', data: {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[72.855,33.495],[73.255,33.495],[73.255,33.815],[72.855,33.815],[72.855,33.495]]]}}});
+  map.addLayer({id:'border',type:'line',source:'ict',paint:{'line-color':'#f00','line-width':9}});
+
+  // ZONES
   ['green','red','orange'].forEach(c => {
-    map.addSource(c, {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
-    map.addLayer({id: c, type: 'fill', source: c, paint: {'fill-color': c==='green'?'#0f0':c==='red'?'#f00':'#ff8400', 'fill-opacity': 0.20}});
-  });
-});
-
-/* D-CHOWK EXACT + LABEL */
-const dchowkExact = {
-  "type": "Feature",
-  "geometry": {
-    "type": "Polygon",
-    "coordinates": [[
-      [73.0900, 33.7315],[73.0915, 33.7318],[73.0928, 33.7319],[73.0942, 33.7317],
-      [73.0958, 33.7312],[73.0965, 33.7305],[73.0968, 33.7295],[73.0965, 33.7285],
-      [73.0958, 33.7278],[73.0945, 33.7273],[73.0928, 33.7271],[73.0912, 33.7272],
-      [73.0900, 33.7275],[73.0895, 33.7282],[73.0893, 33.7290],[73.0895, 33.7300],
-      [73.0898, 33.7308],[73.0900, 33.7315]
-    ]]
-  },
-  "properties": { "name": "D-CHOWK" }
-};
-
-let dchowkVisible = false;
-
-map.on('load', () => {
-  map.addSource('dchowk-exact', { type: 'geojson', data: dchowkExact });
-  
-  map.addLayer({id: 'dchowk-outline', type: 'line', source: 'dchowk-exact',
-    paint: {'line-color': '#0ff', 'line-width': 7}
-  });
-  map.addLayer({id: 'dchowk-fill', type: 'fill', source: 'dchowk-exact',
-    paint: {'fill-color': '#0ff', 'fill-opacity': 0.08}
-  });
-  map.addLayer({id: 'dchowk-label', type: 'symbol', source: 'dchowk-exact',
-    layout: {'text-field': 'D-CHOWK', 'text-size': 24, 'text-font': ['DIN Offc Pro Bold', 'Arial Unicode MS Bold']},
-    paint: {'text-color': '#0ff', 'text-halo-color': '#000', 'text-halo-width': 3}
+    map.addSource(c, {type:'geojson', data:{type:'FeatureCollection',features:[]}});
+    map.addLayer({id:c,type:'fill',source:c,paint:{'fill-color':c==='green'?'#0f0':c==='red'?'#f00':'#ff8400','fill-opacity':0.2}});
   });
 
-  ['dchowk-outline','dchowk-fill','dchowk-label'].forEach(l => 
-    map.setLayoutProperty(l, 'visibility', 'none')
-  );
-});
+  // D-CHOWK
+  map.addSource('dchowk', {type:'geojson', data:dchowk});
+  map.addLayer({id:'d-outline',type:'line',source:'dchowk',paint:{'line-color':'#0ff','line-width':7}});
+  map.addLayer({id:'d-fill',type:'fill',source:'dchowk',paint:{'fill-color':'#0ff','fill-opacity':0.08}});
+  map.addLayer({id:'d-label',type:'symbol',source:'dchowk',layout:{'text-field':'D-CHOWK','text-size':24},paint:{'text-color':'#0ff','text-halo-color':'#000','text-halo-width':3}});
+  ['d-outline','d-fill','d-label'].forEach(l => map.setLayoutProperty(l,'visibility','none'));
 
-/* TOGGLE D-CHOWK */
-document.getElementById('dchowkBtn').onclick = () => {
-  dchowkVisible = !dchowkVisible;
-  const vis = dchowkVisible ? 'visible' : 'none';
-  ['dchowk-outline','dchowk-fill','dchowk-label'].forEach(l => 
-    map.setLayoutProperty(l, 'visibility', vis)
-  );
-  document.getElementById('dchowkBtn').textContent = dchowkVisible ? 'HIDE D-CHOWK' : 'SHOW D-CHOWK';
-  if(dchowkVisible) {
-    map.flyTo({ center: [73.0933, 33.7292], zoom: 18, pitch: 65, speed: 2 });
-    setStatus('D-CHOWK ON — FULL COLOR PULSE');
-  }
-};
-
-let balls = [], spamMode = null;
-const status = document.getElementById('status');
-function setStatus(t){ status.innerHTML = t; }
-
-/* FULL COLOR BALLS — NO WHITE */
-function dropBall(lat, lng, type){
-  const el = document.createElement('div');
-  el.className = type === 'green' ? 'ball-green' : 'ball-red';
-
-  const m = new maptilersdk.Marker({draggable: true, element: el})
-    .setLngLat([lng, lat])
-    .setPopup(new maptilersdk.Popup().setText(type === 'green' ? 'PTI' : 'POLICE'))
-    .addTo(map);
-  m.type = type;
-
-  m.getElement().onclick = () => { 
-    if(spamMode === 'del'){ m.remove(); balls = balls.filter(x => x !== m); updateGroups(); }
+  // TURF
+  const turf = document.createElement('script');
+  turf.src = 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
+  turf.onload = () => {
+    console.log("Turf loaded");
+    loadSavedBalls(); // FIXED: LOAD ON START
   };
-  m.on('dragend', () => { updateGroups(); });
-  balls.push(m);
-  updateGroups();
+  document.head.appendChild(turf);
+});
+
+function placeBall(lng, lat, type) {
+  const el = document.createElement('div');
+  el.className = `ball ${type==='green'?'g':'r'}`;
+  
+  const marker = new maptilersdk.Marker({element: el, draggable: true})
+    .setLngLat([lng, lat])
+    .addTo(map);
+  
+  marker.type = type;
+  marker.getElement().onclick = () => { if(mode==='del'){ marker.remove(); balls=balls.filter(m=>m!==marker); updateZones(); saveBalls(); }};
+  marker.on('dragend', () => { updateZones(); saveBalls(); });
+  balls.push(marker);
+  updateZones();
 }
 
-/* ZONES */
-function updateGroups(){
-  const greens = balls.filter(b => b.type === 'green');
-  const reds   = balls.filter(b => b.type === 'red');
-  let gPoly = greens.length >= 2 ? turf.union(...clusterBalls(greens, 30000)) : null;
-  let rPoly = reds.length >= 2 ? turf.union(...clusterBalls(reds, 30000)) : null;
-  
+function updateZones() {
+  const greens = balls.filter(b=>b.type==='green').map(b=>turf.point([b.getLngLat().lng, b.getLngLat().lat]));
+  const reds = balls.filter(b=>b.type==='red').map(b=>turf.point([b.getLngLat().lng, b.getLngLat().lat]));
+
+  const gPoly = greens.length >= 2 ? turf.convex(turf.featureCollection(greens)) : null;
+  const rPoly = reds.length >= 2 ? turf.convex(turf.featureCollection(reds)) : null;
+
   map.getSource('green').setData(gPoly ? {type:'FeatureCollection',features:[gPoly]} : {type:'FeatureCollection',features:[]});
   map.getSource('red').setData(rPoly ? {type:'FeatureCollection',features:[rPoly]} : {type:'FeatureCollection',features:[]});
-  map.getSource('orange').setData(gPoly && rPoly && turf.intersect(gPoly, rPoly) ? 
-    {type:'FeatureCollection',features:[turf.intersect(gPoly, rPoly)]} : 
+  map.getSource('orange').setData(gPoly && rPoly && turf.intersect(gPoly,rPoly) ? 
+    {type:'FeatureCollection',features:[turf.intersect(gPoly,rPoly)]} : 
     {type:'FeatureCollection',features:[]});
 }
 
-function clusterBalls(arr, dist){
-  if(arr.length < 2) return [];
-  const pts = arr.map(b => turf.point([b.getLngLat().lng, b.getLngLat().lat]));
-  const c = turf.clustersDbscan(turf.featureCollection(pts), dist/1000, {minPoints: 2});
-  const hulls = [];
-  c.features.forEach(f => {
-    if(f.properties.cluster !== undefined){
-      const ptsIn = c.features.filter(x => x.properties.cluster === f.properties.cluster).map(x => x.geometry.coordinates);
-      if(ptsIn.length > 1) {
-        const hull = turf.convex(turf.featureCollection(ptsIn.map(p => turf.point(p))));
-        if(hull) hulls.push(hull);
-      }
-    }
-  });
-  return hulls;
+// FIXED: SAVE EVERY CHANGE
+function saveBalls() {
+  const data = balls.map(b => ({
+    lng: b.getLngLat().lng,
+    lat: b.getLngLat().lat,
+    type: b.type
+  }));
+  localStorage.setItem('AZADI_BALLS', JSON.stringify(data));
+  document.getElementById('status').innerHTML = 'SAVED';
 }
-setInterval(() => { if(balls.length) updateGroups(); }, 900);
 
-/* BUTTONS */
-document.getElementById('spamG').onclick = () => { spamMode = spamMode === 'green' ? null : 'green'; glow(); };
-document.getElementById('spamR').onclick = () => { spamMode = spamMode === 'red' ? null : 'red'; glow(); };
-function glow(){
-  document.getElementById('spamG').style.opacity = spamMode === 'green' ? 1 : 0.6;
-  document.getElementById('spamR').style.opacity = spamMode === 'red' ? 1 : 0.6;
+// FIXED: LOAD ON START
+function loadSavedBalls() {
+  const saved = localStorage.getItem('AZADI_BALLS');
+  if (!saved) {
+    document.getElementById('status').innerHTML = 'NO SAVE YET';
+    return;
+  }
+  const data = JSON.parse(saved);
+  balls.forEach(b => b.remove());
+  balls = [];
+  data.forEach(b => placeBall(b.lng, b.lat, b.type));
+  document.getElementById('status').innerHTML = `LOADED ${data.length} BALLS`;
 }
-document.getElementById('del').onclick = () => { spamMode = 'del'; setStatus('TAP TO DELETE'); };
+
+// BUTTONS
+document.getElementById('addG').onclick = () => { mode='green'; document.getElementById('status').innerHTML='TAP MAP → GREEN'; };
+document.getElementById('addR').onclick = () => { mode='red'; document.getElementById('status').innerHTML='TAP MAP → RED'; };
+document.getElementById('del').onclick = () => { mode='del'; document.getElementById('status').innerHTML='TAP BALL → DELETE'; };
 document.getElementById('move').onclick = () => {
   const on = document.getElementById('move').textContent.includes('OFF');
-  document.getElementById('move').textContent = on ? 'Move ON' : 'Move OFF';
-  balls.forEach(b => on ? b.enableDragging() : b.disableDragging());
+  document.getElementById('move').textContent = on ? 'MOVE ON' : 'MOVE OFF';
+  balls.forEach(b => b.setDraggable(on));
 };
-
+document.getElementById('dchowk').onclick = () => {
+  dVisible = !dVisible;
+  const v = dVisible ? 'visible' : 'none';
+  ['d-outline','d-fill','d-label'].forEach(l => map.setLayoutProperty(l,'visibility',v));
+  document.getElementById('dchowk').textContent = dVisible ? 'HIDE D-CHOWK' : 'SHOW D-CHOWK';
+};
+document.getElementById('save').onclick = () => { saveBalls(); };
 document.getElementById('clear').onclick = () => {
-  if(confirm('NUKE BALLS?')){ balls.forEach(b=>b.remove()); balls=[]; updateGroups(); setStatus('CLEAN — D-CHOWK STAYS'); }
+  if(confirm('NUKE ALL BALLS?')) {
+    balls.forEach(b=>b.remove());
+    balls = [];
+    updateZones();
+    localStorage.removeItem('AZADI_BALLS');
+    document.getElementById('status').innerHTML = 'CLEARED';
+  }
 };
 
-document.getElementById('save').onclick = () => { 
-  localStorage.dchowkColor = JSON.stringify(balls.map(b=>({lat:b.getLngLat().lat,lng:b.getLngLat().lng,t:b.type}))); 
-  setStatus('SAVED'); 
-};
-document.getElementById('load').onclick = () => {
-  const d=localStorage.dchowkColor; 
-  if(!d) return setStatus('No save');
-  balls.forEach(b=>b.remove()); balls=[];
-  JSON.parse(d).forEach(o=>dropBall(o.lat,o.lng,o.t));
-  setStatus('LOADED');
-};
-
+// TAP TO PLACE
 map.on('click', e => {
-  if(spamMode==='green') dropBall(e.lngLat.lat, e.lngLat.lng, 'green');
-  if(spamMode==='red') dropBall(e.lngLat.lat, e.lngLat.lng, 'red');
+  if(!mode || mode==='del') return;
+  placeBall(e.lngLat.lng, e.lngLat.lat, mode);
+  saveBalls(); // AUTO-SAVE
 });
-
-map.on('load', () => {
-  dropBall(33.7292, 73.0933, 'green');
-  dropBall(33.7280, 73.0950, 'red');
-  setStatus('GREEN = GREEN PULSE | RED = RED PULSE | NO WHITE');
-});
-
-const s=document.createElement('script');
-s.src='https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
-document.head.appendChild(s);
 </script>
-</body></html>
+</body>
+</html>
