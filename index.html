@@ -1,1467 +1,248 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PTI Protest Live Map + Report + Chat</title>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>D-CHOWK FULL COLOR PULSE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.umd.js"></script>
+<link href="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.css" rel="stylesheet"/>
+<style>
+  body{margin:0;background:#000;color:#fff;font-family:Arial}
+  #map{height:100vh;width:100%}
+  .panel{position:fixed;top:10px;left:10px;z-index:1000;background:rgba(0,0,0,0.9);padding:15px;border-radius:15px}
+  button{margin:8px;padding:12px 20px;font-size:18px;border:none;border-radius:12px;cursor:pointer;font-weight:bold}
+  .green{background:#0f0;color:#000} .red{background:#f00} .gray{background:#444} .aqua{background:#0ff;color:#000}
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  /* FULL COLOR BALLS — NO WHITE BORDER */
+  .ball-green{
+    width:38px;height:38px;border-radius:50%;
+    background:#0f0;box-shadow:0 0 30px #0f0, 0 0 60px #0f0;
+    animation:pulseGreen 1.5s infinite;
+  }
+  .ball-red{
+    width:38px;height:38px;border-radius:50%;
+    background:#f00;box-shadow:0 0 30px #f00, 0 0 60px #f00;
+    animation:pulseRed 1.5s infinite;
+  }
+  @keyframes pulseGreen{
+    0%,100%{box-shadow:0 0 30px #0f0, 0 0 60px #0f0}
+    50%{box-shadow:0 0 50px #0f0, 0 0 90px #0f0}
+  }
+  @keyframes pulseRed{
+    0%,100%{box-shadow:0 0 30px #f00, 0 0 60px #f00}
+    50%{box-shadow:0 0 50px #f00, 0 0 90px #f00}
+  }
 
-  <style>
-    body, html { 
-      margin: 0; 
-      padding: 0; 
-      height: 100vh; 
-      display: flex; 
-      flex-direction: column; 
-      font-family: Arial, sans-serif; 
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.light {
-      background-color: #ffffff;
-      color: #000000;
-    }
-    body.light #navMenu {
-      background-color: #f0f0f0;
-      border-bottom: 1px solid #ccc;
-    }
-    body.light #map { 
-      background-color: #e0e0e0;
-    }
-    body.light #reportSection {
-      background-color: #ffe0e0;
-      border-top: 1px solid #ccc;
-    }
-    body.light #chat {
-      background-color: #f9f9f9;
-      border-top: 1px solid #ccc;
-    }
-    body.light #messages {
-      background-color: #f9f9f9;
-    }
-    body.light #chatInput {
-      border-top: 1px solid #ccc;
-    }
-    body.dark {
-      background-color: #1a1a1a;
-      color: #ffffff;
-    }
-    body.dark #navMenu {
-      background-color: #2c2c2c;
-      border-bottom: 1px solid #444;
-    }
-    body.dark #map { 
-      background-color: #2c2c2c;
-    }
-    body.dark #reportSection {
-      background-color: #4a2c2c;
-      border-top: 1px solid #444;
-    }
-    body.dark #chat {
-      background-color: #2c2c2c;
-      border-top: 1px solid #444;
-    }
-    body.dark #messages {
-      background-color: #2c2c2c;
-    }
-    body.dark #chatInput {
-      border-top: 1px solid #444;
-    }
-    body.dark #chatInput input[type=text] {
-      background-color: #333;
-      color: #fff;
-    }
-    #navMenu { 
-      height: 50px; 
-      margin-bottom: 5px;
-    }
-    #map { 
-      flex-grow: 1; 
-      min-height: 0;
-      margin-bottom: 5px;
-      z-index: 1;
-    }
-    #reportSection {
-      height: 70px;
-      padding: 8px;
-      text-align: center;
-      margin-bottom: 5px;
-      z-index: 2;
-    }
-    #chat {
-      height: 200px; 
-      display: flex; 
-      flex-direction: column;
-      margin-top: 5px;
-      z-index: 2;
-    }
-    #messages {
-      flex-grow: 1; 
-      overflow-y: auto; 
-      padding: 5px;
-    }
-    #chatInput {
-      display: flex;
-    }
-    #chatInput input[type=text] {
-      flex-grow: 1;
-      padding: 8px;
-      border: none;
-      outline: none;
-      font-size: 1rem;
-    }
-    #chatInput button {
-      padding: 8px 15px;
-      border: none;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.2s;
-    }
-    #chatInput button:hover {
-      transform: scale(1.05);
-    }
-    #alert, #notification {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ff5555;
-      color: white;
-      padding: 8px 15px;
-      border-radius: 5px;
-      font-weight: bold;
-      display: none;
-      z-index: 1000;
-    }
-    #notification {
-      top: 50px;
-      background: #ffa500;
-    }
-    #offlineStatus {
-      position: absolute;
-      top: 90px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ffa500;
-      color: white;
-      padding: 8px 15px;
-      border-radius: 5px;
-      font-weight: bold;
-      display: none;
-      z-index: 1000;
-    }
-    #reportPoliceBtn, #reportIncidentBtn, #reportProtestBtn, #reportInjuredBtn {
-      padding: 10px 20px;
-      font-size: 1rem;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      margin: 0 5px;
-      transition: transform 0.2s;
-    }
-    #reportPoliceBtn {
-      background-color: #ff4444;
-    }
-    #reportIncidentBtn {
-      background-color: #ffa500;
-    }
-    #reportProtestBtn {
-      background-color: #00ff00;
-    }
-    #reportInjuredBtn {
-      background-color: #ff0000;
-    }
-    #reportPoliceBtn:hover, #reportIncidentBtn:hover, #reportProtestBtn:hover, #reportInjuredBtn:hover {
-      transform: scale(1.05);
-    }
-    #incidentType {
-      padding: 10px;
-      margin: 0 5px;
-      border-radius: 3px;
-    }
-    #reportStatus {
-      margin-left: 10px;
-      font-weight: bold;
-    }
-    #navToggle {
-      padding: 8px 15px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    #navToggle:hover {
-      transform: scale(1.05);
-    }
-    #navContent {
-      display: none;
-      position: absolute;
-      top: 40px;
-      left: 8px;
-      background: inherit;
-      padding: 10px;
-      border: 1px solid #444;
-      border-radius: 5px;
-      z-index: 1000;
-    }
-    #navContent.open {
-      display: block;
-    }
-    #navContent label, #navContent select, #navContent button {
-      display: block;
-      margin: 5px 0;
-      padding: 5px;
-    }
-    #navContent select, #navContent button {
-      width: 100%;
-      border-radius: 3px;
-      cursor: pointer;
-    }
-    #reportCounts {
-      font-size: 0.9rem;
-      color: inherit;
-    }
-    #chatWarning {
-      font-size: 0.8rem;
-      color: #ff5555;
-      padding: 5px;
-      text-align: center;
-    }
-    .leaflet-tooltip.protestor-tooltip, 
-    .leaflet-tooltip.police-tooltip, 
-    .leaflet-tooltip.incident-tooltip,
-    .leaflet-tooltip.protestor-self-tooltip,
-    .leaflet-tooltip.protest-tooltip,
-    .leaflet-tooltip.injured-tooltip {
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      border-radius: 5px;
-      padding: 5px 10px;
-      font-size: 14px;
-      font-weight: bold;
-      white-space: nowrap;
-      pointer-events: none;
-      border: 2px solid #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      opacity: 1;
-      transition: opacity 0.3s;
-    }
-    .leaflet-tooltip.protestor-tooltip {
-      background: linear-gradient(135deg, rgba(0, 128, 0, 0.9), rgba(0, 100, 0, 0.7));
-      border-color: #00ff00;
-    }
-    .leaflet-tooltip.protestor-self-tooltip {
-      background: linear-gradient(135deg, rgba(0, 0, 128, 0.9), rgba(0, 0, 100, 0.7));
-      border-color: #0000ff;
-      font-weight: bold;
-    }
-    .leaflet-tooltip.police-tooltip {
-      background: linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(200, 0, 0, 0.7));
-      border-color: #ff0000;
-    }
-    .leaflet-tooltip.incident-tooltip {
-      background: linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(200, 130, 0, 0.7));
-      border-color: #ffa500;
-    }
-    .leaflet-tooltip.protest-tooltip {
-      background: linear-gradient(135deg, rgba(0, 255, 0, 0.9), rgba(0, 200, 0, 0.7));
-      border-color: #00ff00;
-    }
-    .leaflet-tooltip.injured-tooltip {
-      background: linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(200, 0, 0, 0.7));
-      border-color: #ff0000;
-    }
-    .leaflet-tooltip-pane .leaflet-tooltip-left:before,
-    .leaflet-tooltip-pane .leaflet-tooltip-right:before,
-    .leaflet-tooltip-pane .leaflet-tooltip-top:before,
-    .leaflet-tooltip-pane .leaflet-tooltip-bottom:before {
-      border: none;
-    }
-    .leaflet-zoom-animated circle.protestor-zone,
-    .leaflet-zoom-animated circle.police-zone,
-    .leaflet-zoom-animated circle.incident-zone,
-    .leaflet-zoom-animated circle.protest-zone,
-    .leaflet-zoom-animated circle.injured-zone {
-      animation: pulse 2s infinite ease-in-out;
-    }
-    @keyframes pulse {
-      0% { opacity: 0.2; }
-      50% { opacity: 0.4; }
-      100% { opacity: 0.2; }
-    }
-    .leaflet-zoom-animated circle.protestor-zone {
-      stroke: #00ff00;
-      fill: rgba(0, 255, 0, 0.3);
-    }
-    .leaflet-zoom-animated circle.police-zone {
-      stroke: #ff0000;
-      fill: rgba(255, 0, 0, 0.3);
-    }
-    .leaflet-zoom-animated circle.incident-zone {
-      stroke: #ffa500;
-      fill: rgba(255, 165, 0, 0.3);
-    }
-    .leaflet-zoom-animated circle.protest-zone {
-      stroke: #00ff00;
-      fill: rgba(0, 255, 0, 0.3);
-    }
-    .leaflet-zoom-animated circle.injured-zone {
-      stroke: #ff0000;
-      fill: rgba(255, 0, 0, 0.3);
-    }
-    #loginModal {
-      display: flex;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-    }
-    #loginContent {
-      background: #fff;
-      padding: 20px;
-      border-radius: 5px;
-      text-align: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-    body.dark #loginContent {
-      background: #2c2c2c;
-      color: #fff;
-    }
-    #loginContent input {
-      margin: 10px 0;
-      padding: 8px;
-      width: 80%;
-      border-radius: 3px;
-    }
-    #loginContent button {
-      padding: 8px 15px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    #loginContent button:hover {
-      transform: scale(1.05);
-    }
-    #loginStatus {
-      color: red;
-      margin-top: 10px;
-    }
-    .leaflet-cluster-anim .leaflet-marker-icon, .leaflet-cluster-anim .leaflet-marker-shadow {
-      transition: transform 0.3s ease-out, opacity 0.3s ease-in-out;
-    }
-    .leaflet-cluster-spider-leg {
-      stroke-width: 1.5px;
-      stroke-opacity: 0.5;
-    }
-  </style>
-</head>
-<body class="light">
-  <div id="loginModal">
-    <div id="loginContent">
-      <h2>Enter Password</h2>
-      <input type="password" id="passwordInput" placeholder="Password" />
-      <button id="loginBtn">Login</button>
-      <div id="loginStatus"></div>
-    </div>
-  </div>
-  <div id="alert">Get closer to your squad! Less than 20 nearby.</div>
-  <div id="notification"></div>
-  <div id="offlineStatus">Offline Mode: Using cached data</div>
-  <div id="navMenu">
-    <button id="navToggle">Menu</button>
-    <div id="navContent">
-      <button id="themeToggle">Toggle Dark Theme</button>
-      <label><input type="checkbox" id="showProtestorZones" checked> Show Protestor & Rally Zones</label>
-      <label><input type="checkbox" id="showPoliceZones" checked> Show Police Zones</label>
-      <label><input type="checkbox" id="showIncidentZones" checked> Show Incident Zones</label>
-      <label><input type="checkbox" id="showInjuredZones" checked> Show Injured Zones</label>
-      <label><input type="checkbox" id="showHeatmap" checked> Show Protest Density</label>
-      <label><input type="checkbox" id="enableAlertSound" checked> Enable Alert Sounds</label>
-      <select id="mapStyle">
-        <option value="normal">Normal Map</option>
-        <option value="satellite">Satellite Map</option>
-        <option value="dark">Dark Map</option>
-        <option value="winter-dark">Winter Dark</option>
-      </select>
-      <div id="reportCounts">Protestors: 0 | Police: 0 | Incidents: 0 | Protests: 0 | Injured: 0</div>
-    </div>
-  </div>
-  <div id="map"></div>
-  <div id="reportSection">
-    <button id="reportPoliceBtn" disabled>Report Police</button>
-    <button id="reportIncidentBtn" disabled>Report Incident</button>
-    <button id="reportProtestBtn" disabled>Add Protest/Rally</button>
-    <button id="reportInjuredBtn" disabled>Report Injured</button>
-    <select id="incidentType">
-      <option value="violence">Violence 🚨</option>
-      <option value="roadblock">Roadblock 🚧</option>
-      <option value="arrest">Arrest 👮</option>
-    </select>
-    <span id="reportStatus"></span>
-  </div>
-  <div id="chat">
-    <div id="chatWarning">Messages are encrypted but avoid sharing sensitive details.</div>
-    <div id="messages"></div>
-    <div id="chatInput">
-      <input type="text" id="messageInput" placeholder="Type your message here..." />
-      <button id="sendBtn">Send</button>
-    </div>
-  </div>
-  <audio id="alertSound" src="https://freesound.org/data/previews/316/316847_4939433-lq.mp3"></audio>
-  <audio id="injuredSound" src="https://freesound.org/data/previews/340/340153_6148338-lq.mp3"></audio>
+  #status{position:fixed;bottom:15px;left:15px;background:rgba(0,0,0,0.8);padding:12px;border-radius:12px;font-size:16px}
+  #legend{position:fixed;top:170px;right:15px;z-index:1000;background:rgba(0,0,0,0.9);padding:16px 20px;border-radius:16px;border:3px solid #0ff;box-shadow:0 0 30px #0ff;font-size:16px;font-weight:bold;line-height:2.2;backdrop-filter:blur(8px)}
+  .leg-ball{display:inline-block;width:22px;height:22px;border-radius:50%;margin-right:12px;vertical-align:middle;box-shadow:0 0 18px;border:2px solid #fff}
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://unpkg.com/idb@7.0.2/build/iife/index-min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  #searchBox{
+    position:fixed;top:10px;left:50%;transform:translateX(-50%);
+    z-index:1000;background:rgba(0,0,0,0.9);padding:12px 20px;
+    border-radius:30px;border:3px solid #0ff;box-shadow:0 0 20px #0ff;
+    font-size:18px;font-weight:bold;width:340px;text-align:center;
+    backdrop-filter:blur(8px);
+  }
+  #searchBox input{background:transparent;border:none;outline:none;color:#fff;width:260px;font-size:18px;}
+  #searchBox button{background:#0ff;color:#000;padding:8px 16px;border-radius:20px;margin-left:8px;}
+</style></head><body>
 
-  <script>
-    console.log('Script loaded at', new Date().toLocaleString());
+<div id="map"></div>
 
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyBSFKReati2Uyrme9INsxU6nhh06lcC0sQ",
-      authDomain: "protests-d24bb.firebaseapp.com",
-      databaseURL: "https://protests-d24bb-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "protests-d24bb",
-      storageBucket: "protests-d24bb.firebasestorage.app",
-      messagingSenderId: "998701544565",
-      appId: "1:998701544565:web:20fec8bbf58a0609ad343c",
-      measurementId: "G-PLPZXGX0BP"
-    };
+<div id="searchBox">
+  <input type="text" placeholder="Lahore, Islamabad..." id="query">
+  <button onclick="geocode()">GO</button>
+</div>
 
-    // Initialize Firebase
-    let firebaseApp;
-    let db;
-    try {
-      firebaseApp = firebase.initializeApp(firebaseConfig);
-      db = firebaseApp.database();
-      console.log('Firebase initialized successfully');
-    } catch (error) {
-      console.error('Firebase initialization error:', error);
-      db = null;
-    }
+<div class="panel">
+  <button class="green" id="spamG">+ GREEN</button>
+  <button class="red" id="spamR">+ RED</button>
+  <button class="gray" id="del">Delete</button>
+  <button class="gray" id="move">Move OFF</button><br>
+  <button class="aqua" id="dchowkBtn">SHOW D-CHOWK</button>
+  <button class="gray" id="save">Save</button>
+  <button class="gray" id="load">Load</button>
+  <button class="gray" id="clear">Clear ALL</button>
+</div>
 
-    const VALID_PASSWORD = "PTI2025";
-    let isOnline = navigator.onLine;
-    const ENCRYPTION_KEY = "ProtestMapKey2025";
+<div id="status">GREEN = GREEN PULSE | RED = RED PULSE | NO WHITE</div>
+<div id="legend">
+  <div><span class="leg-ball" style="background:#0f0"></span> PTI Group</div>
+  <div><span class="leg-ball" style="background:#f00"></span> Police Group</div>
+  <div><span class="leg-ball" style="background:#ff8400"></span> CLASH ZONE</div>
+  <div><span class="leg-ball" style="background:#0ff"></span> D-CHOWK ZONE</div>
+</div>
 
-    // IndexedDB setup
-    const DB_NAME = 'ProtestMapDB';
-    const DB_VERSION = 1;
-    const STORES = ['protestors', 'police', 'incidents', 'protests', 'injured', 'chat'];
+<script>
+maptilersdk.config.apiKey = 'DBC5HbIkYq5Exj1DeUXm';
+const map = new maptilersdk.Map({
+  container: 'map',
+  style: '0197f1d2-6ab0-74f2-9553-26cfdbe133b5',
+  center: [73.0933, 33.7292],
+  zoom: 16
+});
 
-    async function initIndexedDB() {
-      const db = await idb.openDB(DB_NAME, DB_VERSION, {
-        upgrade(db) {
-          STORES.forEach(store => {
-            if (!db.objectStoreNames.contains(store)) {
-              db.createObjectStore(store, { keyPath: 'id' });
-            }
-          });
-        }
-      });
-      return db;
-    }
+/* RED BORDER */
+map.on('load', () => {
+  const ict = {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[72.855,33.495],[73.255,33.495],[73.255,33.815],[72.855,33.815],[72.855,33.495]]]}};
+  map.addSource('ict', {type: 'geojson', data: ict});
+  map.addLayer({id: 'border', type: 'line', source: 'ict', paint: {'line-color': '#f00', 'line-width': 9}});
+});
 
-    async function saveToIndexedDB(store, data) {
-      console.log(`Saving to IndexedDB: ${store}`, data);
-      const idb = await initIndexedDB();
-      const tx = idb.transaction(store, 'readwrite');
-      const objectStore = tx.objectStore(store);
-      await objectStore.put(data);
-      await tx.done;
-      console.log(`Saved to IndexedDB: ${store} with ID ${data.id}`);
-    }
+/* 20% ZONES */
+map.on('load', () => {
+  ['green','red','orange'].forEach(c => {
+    map.addSource(c, {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
+    map.addLayer({id: c, type: 'fill', source: c, paint: {'fill-color': c==='green'?'#0f0':c==='red'?'#f00':'#ff8400', 'fill-opacity': 0.20}});
+  });
+});
 
-    async function getFromIndexedDB(store) {
-      const idb = await initIndexedDB();
-      const tx = idb.transaction(store, 'readonly');
-      const objectStore = tx.objectStore(store);
-      const data = await objectStore.getAll();
-      console.log(`Retrieved from IndexedDB: ${store}`, data);
-      return data;
-    }
+/* D-CHOWK EXACT + LABEL */
+const dchowkExact = {
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [[
+      [73.0900, 33.7315],[73.0915, 33.7318],[73.0928, 33.7319],[73.0942, 33.7317],
+      [73.0958, 33.7312],[73.0965, 33.7305],[73.0968, 33.7295],[73.0965, 33.7285],
+      [73.0958, 33.7278],[73.0945, 33.7273],[73.0928, 33.7271],[73.0912, 33.7272],
+      [73.0900, 33.7275],[73.0895, 33.7282],[73.0893, 33.7290],[73.0895, 33.7300],
+      [73.0898, 33.7308],[73.0900, 33.7315]
+    ]]
+  },
+  "properties": { "name": "D-CHOWK" }
+};
 
-    async function syncOfflineData() {
-      if (!isOnline || !db) return;
-      console.log('Syncing offline data to Firebase');
-      const idb = await initIndexedDB();
-      for (const store of STORES) {
-        const tx = idb.transaction(store, 'readwrite');
-        const objectStore = tx.objectStore(store);
-        const items = await objectStore.getAll();
-        console.log(`Syncing ${store} with ${items.length} items`);
-        for (const item of items) {
-          if (store === 'chat') {
-            const encryptedText = CryptoJS.AES.encrypt(item.text, ENCRYPTION_KEY).toString();
-            db.ref(store).push({ text: encryptedText, timestamp: item.timestamp });
-          } else {
-            db.ref(store).child(item.id).set(item);
-          }
-        }
-        await objectStore.clear();
-        await tx.done;
-      }
-      syncQueue = { protestors: [], police: [], incidents: [], protests: [], injured: [], chat: [] };
-      console.log('Offline data synced and cleared');
-    }
+let dchowkVisible = false;
 
-    // Global map variables and layers
-    let map = null;
-    let normalMapInstance = null;
-    let satelliteMapInstance = null;
-    let bordersInstance = null;
-    let darkMapInstance = null;
-    let winterDarkMapInstance = null;
-    let heatmapLayer = null;
+map.on('load', () => {
+  map.addSource('dchowk-exact', { type: 'geojson', data: dchowkExact });
+  
+  map.addLayer({id: 'dchowk-outline', type: 'line', source: 'dchowk-exact',
+    paint: {'line-color': '#0ff', 'line-width': 7}
+  });
+  map.addLayer({id: 'dchowk-fill', type: 'fill', source: 'dchowk-exact',
+    paint: {'fill-color': '#0ff', 'fill-opacity': 0.08}
+  });
+  map.addLayer({id: 'dchowk-label', type: 'symbol', source: 'dchowk-exact',
+    layout: {'text-field': 'D-CHOWK', 'text-size': 24, 'text-font': ['DIN Offc Pro Bold', 'Arial Unicode MS Bold']},
+    paint: {'text-color': '#0ff', 'text-halo-color': '#000', 'text-halo-width': 3}
+  });
 
-    // Marker cluster groups
-    let protestorCluster = null;
-    let policeCluster = null;
-    let incidentCluster = null;
-    let protestCluster = null;
-    let injuredCluster = null;
+  ['dchowk-outline','dchowk-fill','dchowk-label'].forEach(l => 
+    map.setLayoutProperty(l, 'visibility', 'none')
+  );
+});
 
-    // Global marker and zone storage
-    let protestorMarkers = {};
-    let protestorZones = {};
-    let policeMarkers = {};
-    let policeZones = {};
-    let incidentMarkers = {};
-    let incidentZones = {};
-    let protestMarkers = {};
-    let protestZones = {};
-    let injuredMarkers = {};
-    let injuredZones = {};
+/* TOGGLE D-CHOWK */
+document.getElementById('dchowkBtn').onclick = () => {
+  dchowkVisible = !dchowkVisible;
+  const vis = dchowkVisible ? 'visible' : 'none';
+  ['dchowk-outline','dchowk-fill','dchowk-label'].forEach(l => 
+    map.setLayoutProperty(l, 'visibility', vis)
+  );
+  document.getElementById('dchowkBtn').textContent = dchowkVisible ? 'HIDE D-CHOWK' : 'SHOW D-CHOWK';
+  if(dchowkVisible) {
+    map.flyTo({ center: [73.0933, 33.7292], zoom: 18, pitch: 65, speed: 2 });
+    setStatus('D-CHOWK ON — FULL COLOR PULSE');
+  }
+};
 
-    // Track user location
-    let myMarker = null;
-    let myId = 'user_' + Math.random().toString(36).slice(2, 10);
+let balls = [], spamMode = null;
+const status = document.getElementById('status');
+function setStatus(t){ status.innerHTML = t; }
 
-    // Rate limiting and lifespans
-    let lastPoliceReportTime = 0;
-    let lastIncidentReportTime = 0;
-    let lastProtestReportTime = 0;
-    let lastInjuredReportTime = 0;
-    const REPORT_COOLDOWN = 30 * 1000;
-    const PROTEST_LIFESPAN = 60 * 60 * 1000;
-    const ZONE_LIFESPAN = 10 * 60 * 1000;
-    const INJURED_LIFESPAN = 10 * 60 * 1000;
+/* FULL COLOR BALLS — NO WHITE */
+function dropBall(lat, lng, type){
+  const el = document.createElement('div');
+  el.className = type === 'green' ? 'ball-green' : 'ball-red';
 
-    // Offline data sync queue
-    let syncQueue = { protestors: [], police: [], incidents: [], protests: [], injured: [], chat: [] };
+  const m = new maptilersdk.Marker({draggable: true, element: el})
+    .setLngLat([lng, lat])
+    .setPopup(new maptilersdk.Popup().setText(type === 'green' ? 'PTI' : 'POLICE'))
+    .addTo(map);
+  m.type = type;
 
-    // Report counts
-    let reportCounts = { protestors: 0, police: 0, incidents: 0, protests: 0, injured: 0 };
+  m.getElement().onclick = () => { 
+    if(spamMode === 'del'){ m.remove(); balls = balls.filter(x => x !== m); updateGroups(); }
+  };
+  m.on('dragend', () => { updateGroups(); });
+  balls.push(m);
+  updateGroups();
+}
 
-    function updateReportCounts() {
-      const reportCountsDiv = document.getElementById('reportCounts');
-      if (reportCountsDiv) {
-        reportCountsDiv.textContent = `Protestors: ${reportCounts.protestors} | Police: ${reportCounts.police} | Incidents: ${reportCounts.incidents} | Protests: ${reportCounts.protests} | Injured: ${reportCounts.injured}`;
+/* ZONES */
+function updateGroups(){
+  const greens = balls.filter(b => b.type === 'green');
+  const reds   = balls.filter(b => b.type === 'red');
+  let gPoly = greens.length >= 2 ? turf.union(...clusterBalls(greens, 30000)) : null;
+  let rPoly = reds.length >= 2 ? turf.union(...clusterBalls(reds, 30000)) : null;
+  
+  map.getSource('green').setData(gPoly ? {type:'FeatureCollection',features:[gPoly]} : {type:'FeatureCollection',features:[]});
+  map.getSource('red').setData(rPoly ? {type:'FeatureCollection',features:[rPoly]} : {type:'FeatureCollection',features:[]});
+  map.getSource('orange').setData(gPoly && rPoly && turf.intersect(gPoly, rPoly) ? 
+    {type:'FeatureCollection',features:[turf.intersect(gPoly, rPoly)]} : 
+    {type:'FeatureCollection',features:[]});
+}
+
+function clusterBalls(arr, dist){
+  if(arr.length < 2) return [];
+  const pts = arr.map(b => turf.point([b.getLngLat().lng, b.getLngLat().lat]));
+  const c = turf.clustersDbscan(turf.featureCollection(pts), dist/1000, {minPoints: 2});
+  const hulls = [];
+  c.features.forEach(f => {
+    if(f.properties.cluster !== undefined){
+      const ptsIn = c.features.filter(x => x.properties.cluster === f.properties.cluster).map(x => x.geometry.coordinates);
+      if(ptsIn.length > 1) {
+        const hull = turf.convex(turf.featureCollection(ptsIn.map(p => turf.point(p))));
+        if(hull) hulls.push(hull);
       }
     }
+  });
+  return hulls;
+}
+setInterval(() => { if(balls.length) updateGroups(); }, 900);
 
-    function showNotification(message) {
-      const notification = document.getElementById('notification');
-      if (notification) {
-        notification.textContent = message;
-        notification.style.display = 'block';
-        setTimeout(() => notification.style.display = 'none', 5000);
-      }
-    }
+/* BUTTONS */
+document.getElementById('spamG').onclick = () => { spamMode = spamMode === 'green' ? null : 'green'; glow(); };
+document.getElementById('spamR').onclick = () => { spamMode = spamMode === 'red' ? null : 'red'; glow(); };
+function glow(){
+  document.getElementById('spamG').style.opacity = spamMode === 'green' ? 1 : 0.6;
+  document.getElementById('spamR').style.opacity = spamMode === 'red' ? 1 : 0.6;
+}
+document.getElementById('del').onclick = () => { spamMode = 'del'; setStatus('TAP TO DELETE'); };
+document.getElementById('move').onclick = () => {
+  const on = document.getElementById('move').textContent.includes('OFF');
+  document.getElementById('move').textContent = on ? 'Move ON' : 'Move OFF';
+  balls.forEach(b => on ? b.enableDragging() : b.disableDragging());
+};
 
-    function updateLocalData(store, newData = null) {
-      const showProtestorZones = document.getElementById('showProtestorZones');
-      const showPoliceZones = document.getElementById('showPoliceZones');
-      const showIncidentZones = document.getElementById('showIncidentZones');
-      const showInjuredZones = document.getElementById('showInjuredZones');
+document.getElementById('clear').onclick = () => {
+  if(confirm('NUKE BALLS?')){ balls.forEach(b=>b.remove()); balls=[]; updateGroups(); setStatus('CLEAN — D-CHOWK STAYS'); }
+};
 
-      let data = {};
-      if (newData) {
-        data[newData.id] = newData;
-        if (isOnline && db) {
-          db.ref(store).child(newData.id).set(newData);
-        }
-        saveToIndexedDB(store, newData);
-      } else if (isOnline && db) {
-        db.ref(store).once('value', snapshot => {
-          data = snapshot.val() || {};
-          const idb = initIndexedDB().then(idb => {
-            const tx = idb.transaction(store, 'readwrite');
-            const objectStore = tx.objectStore(store);
-            objectStore.clear();
-            for (const id in data) {
-              objectStore.put({ id, ...data[id] });
-            }
-            tx.done;
-          });
-          updateDataOnMap(store, data);
-        });
-        return;
-      } else {
-        getFromIndexedDB(store).then(items => {
-          items.forEach(item => data[item.id] = item);
-          updateDataOnMap(store, data);
-        });
-        return;
-      }
-      updateDataOnMap(store, data);
-    }
+document.getElementById('save').onclick = () => { 
+  localStorage.dchowkColor = JSON.stringify(balls.map(b=>({lat:b.getLngLat().lat,lng:b.getLngLat().lng,t:b.type}))); 
+  setStatus('SAVED'); 
+};
+document.getElementById('load').onclick = () => {
+  const d=localStorage.dchowkColor; 
+  if(!d) return setStatus('No save');
+  balls.forEach(b=>b.remove()); balls=[];
+  JSON.parse(d).forEach(o=>dropBall(o.lat,o.lng,o.t));
+  setStatus('LOADED');
+};
 
-    function calculateCrowdDensity(protestId, protestLat, protestLon) {
-      let count = 0;
-      for (const id in protestorMarkers) {
-        const p = protestorMarkers[id].getLatLng();
-        const distance = map.distance(L.latLng(protestLat, protestLon), p);
-        if (distance <= 500) count++;
-      }
-      return count;
-    }
+map.on('click', e => {
+  if(spamMode==='green') dropBall(e.lngLat.lat, e.lngLat.lng, 'green');
+  if(spamMode==='red') dropBall(e.lngLat.lat, e.lngLat.lng, 'red');
+});
 
-    function updateDataOnMap(store, data) {
-      let markers, zones, cluster, icon, popupText, zoneClass, tooltipText, tooltipClass;
-      if (store === 'protestors') {
-        markers = protestorMarkers;
-        zones = protestorZones;
-        cluster = protestorCluster;
-        icon = L.icon({
-          iconUrl: 'https://cdn-icons-png.flaticon.com/512/3188/3188004.png',
-          iconSize: [35, 35],
-          iconAnchor: [17, 35],
-          popupAnchor: [0, -35]
-        });
-        popupText = 'Protestor';
-        zoneClass = 'protestor-zone';
-        tooltipText = 'Protestor';
-        tooltipClass = 'protestor-tooltip';
-      } else if (store === 'police') {
-        markers = policeMarkers;
-        zones = policeZones;
-        cluster = policeCluster;
-        icon = L.icon({
-          iconUrl: 'https://cdn-icons-png.flaticon.com/512/1022/1022032.png',
-          iconSize: [35, 35],
-          iconAnchor: [17, 35],
-          popupAnchor: [0, -35]
-        });
-        popupText = 'Police Forces';
-        zoneClass = 'police-zone';
-        tooltipText = 'Police Zone';
-        tooltipClass = 'police-tooltip';
-      } else if (store === 'incidents') {
-        markers = incidentMarkers;
-        zones = incidentZones;
-        cluster = incidentCluster;
-        icon = L.icon({
-          iconUrl: 'https://cdn-icons-png.flaticon.com/512/1828/1828859.png',
-          iconSize: [35, 35],
-          iconAnchor: [17, 35],
-          popupAnchor: [0, -35]
-        });
-        zoneClass = 'incident-zone';
-        tooltipClass = 'incident-tooltip';
-      } else if (store === 'protests') {
-        markers = protestMarkers;
-        zones = protestZones;
-        cluster = protestCluster;
-        icon = L.icon({
-          iconUrl: 'https://cdn-icons-png.flaticon.com/512/3179/3179589.png',
-          iconSize: [35, 35],
-          iconAnchor: [17, 35],
-          popupAnchor: [0, -35]
-        });
-        popupText = 'Protest/Rally';
-        zoneClass = 'protest-zone';
-        tooltipText = 'Protest/Rally';
-        tooltipClass = 'protest-tooltip';
-      } else if (store === 'injured') {
-        markers = injuredMarkers;
-        zones = injuredZones;
-        cluster = injuredCluster;
-        icon = L.icon({
-          iconUrl: 'https://cdn-icons-png.flaticon.com/512/3003/3003171.png',
-          iconSize: [35, 35],
-          iconAnchor: [17, 35],
-          popupAnchor: [0, -35]
-        });
-        popupText = 'Injured Person';
-        zoneClass = 'injured-zone';
-        tooltipText = 'Injured';
-        tooltipClass = 'injured-tooltip';
-      }
+map.on('load', () => {
+  dropBall(33.7292, 73.0933, 'green');
+  dropBall(33.7280, 73.0950, 'red');
+  setStatus('GREEN = GREEN PULSE | RED = RED PULSE | NO WHITE');
+});
 
-      // Remove outdated markers and zones
-      for (const id in markers) {
-        if (!data[id]) {
-          if (map && cluster.hasLayer(markers[id])) cluster.removeLayer(markers[id]);
-          if (map && zones[id] && map.hasLayer(zones[id])) map.removeLayer(zones[id]);
-          delete markers[id];
-          delete zones[id];
-        }
-      }
-
-      // Update or add markers and zones
-      const zoomLevel = map ? map.getZoom() : 10;
-      for (const id in data) {
-        const p = data[id];
-        let currentIcon = icon;
-        let currentPopupText = popupText;
-        let currentTooltipText = tooltipText;
-        let currentTooltipClass = tooltipClass;
-        let radius = store === 'police' ? 500 : store === 'incidents' ? 600 : store === 'protests' ? 300 : store === 'injured' ? 300 : 150;
-
-        if (store === 'protestors' && id === myId) {
-          currentIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/3188/3188004.png',
-            iconSize: [40, 40],
-            iconAnchor: [20, 40],
-            popupAnchor: [0, -40]
-          });
-          currentPopupText = 'You (Protestor)';
-          currentTooltipClass = 'protestor-self-tooltip';
-          currentTooltipText = 'You';
-        } else if (store === 'incidents') {
-          const incidentType = p.type || 'unknown';
-          const emoji = { violence: '🚨', roadblock: '🚧', arrest: '👮', unknown: '❓' }[incidentType];
-          currentPopupText = `${emoji} ${incidentType.charAt(0).toUpperCase() + incidentType.slice(1)}`;
-          currentTooltipText = `Incident: ${incidentType}`;
-        } else if (store === 'protests') {
-          const crowdSize = calculateCrowdDensity(id, p.lat, p.lon);
-          currentPopupText = `Protest/Rally (~${crowdSize} people)`;
-          currentTooltipText = `Protest: ~${crowdSize} people`;
-        }
-        const timeSince = Date.now() - p.timestamp;
-        currentTooltipText += ` (${Math.round(timeSince / 60000)}m ago)`;
-
-        if (markers[id]) {
-          markers[id].setLatLng([p.lat, p.lon]).setIcon(currentIcon).setPopupContent(currentPopupText);
-          if (zones[id]) {
-            zones[id].setLatLng([p.lat, p.lon]);
-            if (zoomLevel >= 10) {
-              zones[id].bindTooltip(currentTooltipText, {
-                permanent: true,
-                direction: store === 'incidents' ? 'bottom' : 'top',
-                offset: L.point(0, store === 'incidents' ? 15 : -15),
-                className: currentTooltipClass
-              });
-            } else {
-              zones[id].unbindTooltip();
-            }
-          }
-        } else {
-          markers[id] = L.marker([p.lat, p.lon], { icon: currentIcon, data: { id, ...p } }).bindPopup(currentPopupText);
-          cluster.addLayer(markers[id]);
-          zones[id] = L.circle([p.lat, p.lon], {
-            radius: radius,
-            color: store === 'police' ? '#ff0000' : store === 'incidents' ? '#ffa500' : '#00ff00',
-            fillOpacity: 0.3,
-            className: zoneClass
-          });
-          if ((store === 'protestors' || store === 'protests') && showProtestorZones?.checked ||
-              store === 'police' && showPoliceZones?.checked ||
-              store === 'incidents' && showIncidentZones?.checked ||
-              store === 'injured' && showInjuredZones?.checked) {
-            zones[id].addTo(map);
-          }
-          if (zoomLevel >= 10) {
-            zones[id].bindTooltip(currentTooltipText, {
-              permanent: true,
-              direction: store === 'incidents' ? 'bottom' : 'top',
-              offset: L.point(0, store === 'incidents' ? 15 : -15),
-              className: currentTooltipClass
-            });
-          }
-        }
-
-        // Check for nearby police/incidents/injured for notifications
-        if ((store === 'police' || store === 'incidents' || store === 'injured') && myMarker) {
-          const myPos = myMarker.getLatLng();
-          const distance = map.distance(myPos, L.latLng(p.lat, p.lon));
-          if (distance <= 1000 && timeSince < (store === 'injured' ? 5 * 60 * 1000 : 10 * 60 * 1000)) {
-            const message = store === 'police' ? 'Police reported nearby!' :
-                           store === 'incidents' ? `Incident (${p.type}) reported nearby!` :
-                           `Injured person ${Math.round(distance)}m away!`;
-            showNotification(message);
-            if (document.getElementById('enableAlertSound')?.checked) {
-              const sound = store === 'injured' ? document.getElementById('injuredSound') : document.getElementById('alertSound');
-              if (sound) {
-                sound.play().catch(error => console.error('Audio play error:', error));
-              }
-            }
-          }
-        }
-      }
-
-      reportCounts[store] = Object.keys(data).length;
-      updateReportCounts();
-      if (store === 'protestors') checkSquad(data);
-      if (store === 'protests' && document.getElementById('showHeatmap')?.checked) updateHeatmap(data);
-    }
-
-    function updateHeatmap(data) {
-      if (!map) return;
-      if (heatmapLayer) map.removeLayer(heatmapLayer);
-      const points = Object.values(data || {}).map(p => {
-        const crowdSize = calculateCrowdDensity(p.id, p.lat, p.lon);
-        return [p.lat, p.lon, Math.min(crowdSize / 50, 1)]; // Normalize intensity
-      });
-      heatmapLayer = L.heatLayer(points, {
-        radius: 25,
-        blur: 15,
-        maxZoom: 17,
-        gradient: { 0.2: 'green', 0.5: 'yellow', 0.8: 'orange', 1: 'red' }
-      });
-      if (document.getElementById('showHeatmap')?.checked) {
-        heatmapLayer.addTo(map);
-      }
-    }
-
-    function checkSquad(protestors) {
-      const positions = Object.values(protestors).map(p => [p.lat, p.lon]);
-      const myPos = myMarker ? myMarker.getLatLng() : null;
-      const alertBox = document.getElementById('alert');
-      if (!myPos) {
-        if (alertBox) alertBox.style.display = 'none';
-        return;
-      }
-      let closeCount = 0;
-      positions.forEach(pos => {
-        if (map && map.distance(myPos, L.latLng(pos)) <= 200) closeCount++;
-      });
-      if (closeCount < 20) {
-        if (alertBox) alertBox.style.display = 'block';
-      } else {
-        if (alertBox) alertBox.style.display = 'none';
-      }
-    }
-
-    function initializeMap() {
-      if (map) {
-        console.log('Map already initialized.');
-        return;
-      }
-
-      try {
-        map = L.map('map', { preferCanvas: true }).setView([30.3753, 69.3451], 6);
-        console.log('Map initialized successfully');
-
-        // Map layers
-        normalMapInstance = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 18,
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        satelliteMapInstance = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-          maxZoom: 18,
-          attribution: '© Esri'
-        });
-
-        darkMapInstance = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-          attribution: '© <a href="https://stadiamaps.com/">Stadia Maps</a> © <a href="https://openmaptiles.org/">OpenMapTiles</a> © <a href="https://openstreetmap.org">OpenStreetMap contributors</a>',
-          minZoom: 0,
-          maxZoom: 20
-        });
-
-        winterDarkMapInstance = L.tileLayer('https://api.maptiler.com/maps/winter-v2-dark/{z}/{x}/{y}.png?key=DBC5HbIkYq5Exj1DeUXm', {
-          attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">© MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap contributors</a>',
-          minZoom: 0,
-          maxZoom: 20
-        });
-
-        bordersInstance = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 18,
-          opacity: 1,
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        if (map.hasLayer(satelliteMapInstance)) map.removeLayer(satelliteMapInstance);
-        if (map.hasLayer(darkMapInstance)) map.removeLayer(darkMapInstance);
-        if (map.hasLayer(winterDarkMapInstance)) map.removeLayer(winterDarkMapInstance);
-        if (!map.hasLayer(normalMapInstance)) normalMapInstance.addTo(map);
-
-        // Initialize marker clusters
-        protestorCluster = L.markerClusterGroup({ maxClusterRadius: 50 });
-        policeCluster = L.markerClusterGroup({ maxClusterRadius: 50 });
-        incidentCluster = L.markerClusterGroup({ maxClusterRadius: 50 });
-        protestCluster = L.markerClusterGroup({ maxClusterRadius: 50 });
-        injuredCluster = L.markerClusterGroup({ maxClusterRadius: 50 });
-        map.addLayer(protestorCluster);
-        map.addLayer(policeCluster);
-        map.addLayer(incidentCluster);
-        map.addLayer(protestCluster);
-        map.addLayer(injuredCluster);
-
-        // Update tooltips on zoom
-        map.on('zoomend', () => {
-          const zoomLevel = map.getZoom();
-          ['protestors', 'police', 'incidents', 'protests', 'injured'].forEach(store => {
-            const zones = store === 'protestors' ? protestorZones : store === 'police' ? policeZones : store === 'incidents' ? incidentZones : store === 'protests' ? protestZones : injuredZones;
-            for (const id in zones) {
-              if (zoomLevel < 10) {
-                zones[id].unbindTooltip();
-              } else if (!zones[id].getTooltip()) {
-                const data = (store === 'protestors' ? protestorMarkers : store === 'police' ? policeMarkers : store === 'incidents' ? incidentMarkers : store === 'protests' ? protestMarkers : injuredMarkers)[id]?.__parent?._markers?.[0]?.options?.data;
-                if (data) {
-                  let tooltipText = store === 'protestors' ? (data.id === myId ? 'You' : 'Protestor') :
-                                   store === 'police' ? 'Police Zone' :
-                                   store === 'incidents' ? `Incident: ${data.type || 'unknown'}` :
-                                   store === 'protests' ? `Protest: ~${calculateCrowdDensity(data.id, data.lat, data.lon)} people` :
-                                   'Injured';
-                  tooltipText += ` (${Math.round((Date.now() - data.timestamp) / 60000)}m ago)`;
-                  zones[id].bindTooltip(tooltipText, {
-                    permanent: true,
-                    direction: store === 'incidents' ? 'bottom' : 'top',
-                    offset: L.point(0, store === 'incidents' ? 15 : -15),
-                    className: store === 'protestors' ? (data.id === myId ? 'protestor-self-tooltip' : 'protestor-tooltip') :
-                               store === 'police' ? 'police-tooltip' :
-                               store === 'incidents' ? 'incident-tooltip' :
-                               store === 'protests' ? 'protest-tooltip' : 'injured-tooltip'
-                  });
-                }
-              }
-            }
-          });
-        });
-
-        // Set up real-time listeners
-        if (isOnline && db) {
-          STORES.slice(0, 5).forEach(store => {
-            db.ref(store).on('value', () => updateLocalData(store));
-          });
-        } else {
-          STORES.slice(0, 5).forEach(store => updateLocalData(store));
-        }
-
-        function cleanOldZones() {
-          const now = Date.now();
-          console.log('Running cleanOldZones at', new Date(now).toLocaleTimeString());
-
-          STORES.slice(0, 5).forEach(async store => {
-            if (isOnline && db) {
-              db.ref(store).once('value', snapshot => {
-                const data = snapshot.val() || {};
-                let countRemoved = 0;
-                for (const id in data) {
-                  if (store === 'protestors' && id === myId) continue;
-                  if (now - data[id].timestamp > (store === 'protests' ? PROTEST_LIFESPAN : store === 'injured' ? INJURED_LIFESPAN : ZONE_LIFESPAN)) {
-                    db.ref(`${store}/${id}`).remove().catch(error => {
-                      console.error(`Error removing old ${store} zone ${id}:`, error);
-                    });
-                    countRemoved++;
-                  }
-                }
-                if (countRemoved > 0) {
-                  console.log(`Cleaned ${countRemoved} old ${store} zones online.`);
-                }
-              });
-            }
-            const idb = await initIndexedDB();
-            const tx = idb.transaction(store, 'readwrite');
-            const objectStore = tx.objectStore(store);
-            const data = await objectStore.getAll();
-            let countRemoved = 0;
-            for (const item of data) {
-              if (store === 'protestors' && item.id === myId) continue;
-              if (now - item.timestamp > (store === 'protests' ? PROTEST_LIFESPAN : store === 'injured' ? INJURED_LIFESPAN : ZONE_LIFESPAN)) {
-                await objectStore.delete(item.id);
-                countRemoved++;
-              }
-            }
-            await tx.done;
-            if (countRemoved > 0) {
-              console.log(`Cleaned ${countRemoved} old ${store} zones offline.`);
-            }
-            updateLocalData(store);
-          });
-        }
-
-        setInterval(cleanOldZones, 60 * 1000);
-
-        function saveMyLocation(lat, lon) {
-          const data = { id: myId, lat, lon, timestamp: Date.now() };
-          if (isOnline && db) {
-            const myRef = db.ref('protestors/' + myId);
-            myRef.onDisconnect().remove().then(() => {
-              console.log('onDisconnect set for my ID:', myId);
-            }).catch(error => {
-              console.error('Failed to set onDisconnect:', error);
-            });
-            myRef.set(data);
-          }
-          syncQueue.protestors.push(data);
-          saveToIndexedDB('protestors', data);
-          updateLocalData('protestors', data);
-        }
-
-        if (navigator.geolocation) {
-          navigator.geolocation.watchPosition(pos => {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            const protestorIcon = L.icon({
-              iconUrl: 'https://cdn-icons-png.flaticon.com/512/3188/3188004.png',
-              iconSize: [40, 40],
-              iconAnchor: [20, 40],
-              popupAnchor: [0, -40]
-            });
-            if (!myMarker) {
-              myMarker = L.marker([lat, lon], { icon: protestorIcon, data: { id: myId, lat, lon, timestamp: Date.now() } }).addTo(map).bindPopup('You (Protestor)').openPopup();
-              map.setView([lat, lon], 15);
-              document.getElementById('reportPoliceBtn').disabled = false;
-              document.getElementById('reportIncidentBtn').disabled = false;
-              document.getElementById('reportProtestBtn').disabled = false;
-              document.getElementById('reportInjuredBtn').disabled = false;
-            } else {
-              myMarker.setLatLng([lat, lon]).setIcon(protestorIcon);
-              myMarker.options.data = { id: myId, lat, lon, timestamp: Date.now() };
-            }
-            saveMyLocation(lat, lon);
-          }, err => {
-            console.warn('Location error:', err);
-            document.getElementById('loginStatus').textContent = 'Location access denied. App may not work fully.';
-            document.getElementById('reportPoliceBtn').disabled = true;
-            document.getElementById('reportIncidentBtn').disabled = true;
-            document.getElementById('reportProtestBtn').disabled = true;
-            document.getElementById('reportInjuredBtn').disabled = true;
-          }, { enableHighAccuracy: true });
-        } else {
-          alert('Geolocation not supported by your browser');
-          document.getElementById('loginStatus').textContent = 'Geolocation not supported. App may not work fully.';
-          document.getElementById('reportPoliceBtn').disabled = true;
-          document.getElementById('reportIncidentBtn').disabled = true;
-          document.getElementById('reportProtestBtn').disabled = true;
-          document.getElementById('reportInjuredBtn').disabled = true;
-        }
-
-        const messagesDiv = document.getElementById('messages');
-        function addMessage(msg, isLocal = false) {
-          if (messagesDiv) {
-            const div = document.createElement('div');
-            let decryptedText = msg;
-            if (!isLocal) {
-              try {
-                const bytes = CryptoJS.AES.decrypt(msg, ENCRYPTION_KEY);
-                decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-                if (!decryptedText) throw new Error('Decryption failed');
-              } catch (error) {
-                console.error('Decryption error:', error);
-                decryptedText = '[Decryption Failed]';
-              }
-            }
-            div.textContent = isLocal ? `[LOCAL ${new Date().toLocaleTimeString()}] ${decryptedText}` : `[${new Date().toLocaleTimeString()}] ${decryptedText}`;
-            messagesDiv.appendChild(div);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-          }
-        }
-
-        if (isOnline && db) {
-          db.ref('chat').on('child_added', async snapshot => {
-            const msg = snapshot.val();
-            const time = new Date(msg.timestamp).toLocaleTimeString();
-            await addMessage(msg.text);
-            await saveToIndexedDB('chat', { id: snapshot.key, text: msg.text, timestamp: msg.timestamp });
-          });
-        } else {
-          getFromIndexedDB('chat').then(messages => {
-            messages.forEach(msg => {
-              const time = new Date(msg.timestamp).toLocaleTimeString();
-              addMessage(msg.text, true);
-            });
-          });
-        }
-      } catch (error) {
-        console.error('Map initialization error:', error);
-        document.getElementById('loginStatus').textContent = 'Map failed to load. Please reload.';
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM fully loaded.');
-
-      const loginModal = document.getElementById('loginModal');
-      const passwordInput = document.getElementById('passwordInput');
-      const loginBtn = document.getElementById('loginBtn');
-      const loginStatus = document.getElementById('loginStatus');
-      const navMenu = document.getElementById('navMenu');
-      const reportSection = document.getElementById('reportSection');
-      const chat = document.getElementById('chat');
-      const offlineStatus = document.getElementById('offlineStatus');
-
-      const navToggle = document.getElementById('navToggle');
-      const navContent = document.getElementById('navContent');
-      const themeToggle = document.getElementById('themeToggle');
-      const showProtestorZones = document.getElementById('showProtestorZones');
-      const showPoliceZones = document.getElementById('showPoliceZones');
-      const showIncidentZones = document.getElementById('showIncidentZones');
-      const showInjuredZones = document.getElementById('showInjuredZones');
-      const showHeatmap = document.getElementById('showHeatmap');
-      const enableAlertSound = document.getElementById('enableAlertSound');
-      const mapStyleSelect = document.getElementById('mapStyle');
-
-      const reportPoliceBtn = document.getElementById('reportPoliceBtn');
-      const reportIncidentBtn = document.getElementById('reportIncidentBtn');
-      const reportProtestBtn = document.getElementById('reportProtestBtn');
-      const reportInjuredBtn = document.getElementById('reportInjuredBtn');
-      const incidentTypeSelect = document.getElementById('incidentType');
-      const reportStatus = document.getElementById('reportStatus');
-
-      const messagesDiv = document.getElementById('messages');
-      const messageInput = document.getElementById('messageInput');
-      const sendBtn = document.getElementById('sendBtn');
-
-      // Hide sections initially
-      navMenu.style.display = 'none';
-      reportSection.style.display = 'none';
-      chat.style.display = 'none';
-
-      // Offline status handling
-      window.addEventListener('online', () => {
-        isOnline = true;
-        if (offlineStatus) offlineStatus.style.display = 'none';
-        syncOfflineData();
-        console.log('App is online, syncing data');
-      });
-      window.addEventListener('offline', () => {
-        isOnline = false;
-        if (offlineStatus) offlineStatus.style.display = 'block';
-        console.log('App is offline, using cached data');
-      });
-
-      if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-          const password = passwordInput.value.trim();
-          if (password === VALID_PASSWORD) {
-            console.log('Password correct');
-            if (isOnline && db) {
-              firebaseApp.auth().signInAnonymously().then(() => {
-                console.log('Anonymous login successful');
-                if (loginModal) loginModal.style.display = 'none';
-                if (navMenu) navMenu.style.display = 'block';
-                if (reportSection) reportSection.style.display = 'block';
-                if (chat) chat.style.display = 'flex';
-                initializeMap();
-              }).catch(error => {
-                console.error('Authentication error:', error);
-                if (loginStatus) loginStatus.textContent = `Authentication failed: ${error.code || error.message}`;
-              });
-            } else {
-              if (loginModal) loginModal.style.display = 'none';
-              if (navMenu) navMenu.style.display = 'block';
-              if (reportSection) reportSection.style.display = 'block';
-              if (chat) chat.style.display = 'flex';
-              initializeMap();
-            }
-          } else {
-            console.log('Invalid password entered');
-            if (loginStatus) loginStatus.textContent = 'Invalid password';
-          }
-        });
-      }
-
-      if (navToggle && navContent) {
-        navToggle.addEventListener('click', () => {
-          navContent.classList.toggle('open');
-        });
-        document.addEventListener('click', (e) => {
-          if (!navToggle.contains(e.target) && !navContent.contains(e.target)) {
-            navContent.classList.remove('open');
-          }
-        });
-      }
-
-      if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-          document.body.classList.toggle('light');
-          document.body.classList.toggle('dark');
-          themeToggle.textContent = document.body.classList.contains('dark') ? 'Toggle Light Theme' : 'Toggle Dark Theme';
-        });
-      }
-
-      if (showProtestorZones) {
-        showProtestorZones.addEventListener('change', () => {
-          for (const id in protestorZones) {
-            if (showProtestorZones.checked) {
-              protestorZones[id].addTo(map);
-            } else {
-              if (map.hasLayer(protestorZones[id])) map.removeLayer(protestorZones[id]);
-            }
-          }
-          for (const id in protestZones) {
-            if (showProtestorZones.checked) {
-              protestZones[id].addTo(map);
-            } else {
-              if (map.hasLayer(protestZones[id])) map.removeLayer(protestZones[id]);
-            }
-          }
-        });
-      }
-      if (showPoliceZones) {
-        showPoliceZones.addEventListener('change', () => {
-          for (const id in policeZones) {
-            if (showPoliceZones.checked) {
-              policeZones[id].addTo(map);
-            } else {
-              if (map.hasLayer(policeZones[id])) map.removeLayer(policeZones[id]);
-            }
-          }
-        });
-      }
-      if (showIncidentZones) {
-        showIncidentZones.addEventListener('change', () => {
-          for (const id in incidentZones) {
-            if (showIncidentZones.checked) {
-              incidentZones[id].addTo(map);
-            } else {
-              if (map.hasLayer(incidentZones[id])) map.removeLayer(incidentZones[id]);
-            }
-          }
-        });
-      }
-      if (showInjuredZones) {
-        showInjuredZones.addEventListener('change', () => {
-          for (const id in injuredZones) {
-            if (showInjuredZones.checked) {
-              injuredZones[id].addTo(map);
-            } else {
-              if (map.hasLayer(injuredZones[id])) map.removeLayer(injuredZones[id]);
-            }
-          }
-        });
-      }
-      if (showHeatmap) {
-        showHeatmap.addEventListener('change', () => {
-          if (showHeatmap.checked) {
-            updateHeatmap(null);
-          } else if (heatmapLayer) {
-            map.removeLayer(heatmapLayer);
-          }
-        });
-      }
-
-      if (mapStyleSelect) {
-        mapStyleSelect.addEventListener('change', () => {
-          if (map && normalMapInstance && satelliteMapInstance && bordersInstance && darkMapInstance && winterDarkMapInstance) {
-            if (map.hasLayer(normalMapInstance)) map.removeLayer(normalMapInstance);
-            if (map.hasLayer(satelliteMapInstance)) map.removeLayer(satelliteMapInstance);
-            if (map.hasLayer(darkMapInstance)) map.removeLayer(darkMapInstance);
-            if (map.hasLayer(winterDarkMapInstance)) map.removeLayer(winterDarkMapInstance);
-
-            if (mapStyleSelect.value === 'normal') {
-              normalMapInstance.addTo(map);
-            } else if (mapStyleSelect.value === 'satellite') {
-              satelliteMapInstance.addTo(map);
-            } else if (mapStyleSelect.value === 'dark') {
-              darkMapInstance.addTo(map);
-            } else if (mapStyleSelect.value === 'winter-dark') {
-              winterDarkMapInstance.addTo(map);
-            }
-
-            if (!map.hasLayer(bordersInstance)) {
-              bordersInstance.addTo(map);
-            }
-          }
-        });
-      }
-
-      if (reportPoliceBtn && reportIncidentBtn && reportProtestBtn && reportInjuredBtn && reportStatus && incidentTypeSelect) {
-        reportPoliceBtn.addEventListener('click', async () => {
-          const now = Date.now();
-          if (now - lastPoliceReportTime < REPORT_COOLDOWN) {
-            reportStatus.textContent = 'Please wait 30 seconds before reporting again.';
-            return;
-          }
-          if (!myMarker) {
-            reportStatus.textContent = 'Location not found!';
-            return;
-          }
-          const pos = myMarker.getLatLng();
-          const data = { id: 'police_' + Math.random().toString(36).slice(2), lat: pos.lat, lon: pos.lng, timestamp: now };
-          try {
-            if (isOnline && db) {
-              await db.ref('police').child(data.id).set(data);
-            } else {
-              syncQueue.police.push(data);
-              await saveToIndexedDB('police', data);
-            }
-            lastPoliceReportTime = now;
-            reportStatus.textContent = isOnline ? 'Police reported! Stay safe' : 'Police reported (offline)! Will sync when online.';
-            setTimeout(() => reportStatus.textContent = '', 3000);
-            updateLocalData('police', data);
-          } catch (error) {
-            console.error('Police report error:', error);
-            reportStatus.textContent = 'Error reporting police: ' + error.message;
-          }
-        });
-
-        reportIncidentBtn.addEventListener('click', async () => {
-          const now = Date.now();
-          if (now - lastIncidentReportTime < REPORT_COOLDOWN) {
-            reportStatus.textContent = 'Please wait 30 seconds before reporting again.';
-            return;
-          }
-          if (!myMarker) {
-            reportStatus.textContent = 'Location not found!';
-            return;
-          }
-          const pos = myMarker.getLatLng();
-          const incidentType = incidentTypeSelect.value;
-          const data = { id: 'incident_' + Math.random().toString(36).slice(2), lat: pos.lat, lon: pos.lng, timestamp: now, type: incidentType };
-          try {
-            if (isOnline && db) {
-              await db.ref('incidents').child(data.id).set(data);
-            } else {
-              syncQueue.incidents.push(data);
-              await saveToIndexedDB('incidents', data);
-            }
-            lastIncidentReportTime = now;
-            reportStatus.textContent = isOnline ? 'Incident reported!' : 'Incident reported (offline)! Will sync when online.';
-            setTimeout(() => reportStatus.textContent = '', 3000);
-            updateLocalData('incidents', data);
-          } catch (error) {
-            console.error('Incident report error:', error);
-            reportStatus.textContent = 'Error reporting incident: ' + error.message;
-          }
-        });
-
-        reportProtestBtn.addEventListener('click', async () => {
-          const now = Date.now();
-          if (now - lastProtestReportTime < REPORT_COOLDOWN) {
-            reportStatus.textContent = 'Please wait 30 seconds before reporting again.';
-            return;
-          }
-          if (!myMarker) {
-            reportStatus.textContent = 'Location not found!';
-            return;
-          }
-          const pos = myMarker.getLatLng();
-          const data = { id: 'protest_' + Math.random().toString(36).slice(2), lat: pos.lat, lon: pos.lng, timestamp: now };
-          try {
-            if (isOnline && db) {
-              await db.ref('protests').child(data.id).set(data);
-            } else {
-              syncQueue.protests.push(data);
-              await saveToIndexedDB('protests', data);
-            }
-            lastProtestReportTime = now;
-            reportStatus.textContent = isOnline ? 'Protest/Rally reported!' : 'Protest/Rally reported (offline)! Will sync when online.';
-            setTimeout(() => reportStatus.textContent = '', 3000);
-            updateLocalData('protests', data);
-          } catch (error) {
-            console.error('Protest report error:', error);
-            reportStatus.textContent = 'Error reporting protest: ' + error.message;
-          }
-        });
-
-        reportInjuredBtn.addEventListener('click', async () => {
-          const now = Date.now();
-          if (now - lastInjuredReportTime < REPORT_COOLDOWN) {
-            reportStatus.textContent = 'Please wait 30 seconds before reporting again.';
-            return;
-          }
-          if (!myMarker) {
-            reportStatus.textContent = 'Location not found!';
-            return;
-          }
-          const pos = myMarker.getLatLng();
-          const data = { id: 'injured_' + Math.random().toString(36).slice(2), lat: pos.lat, lon: pos.lng, timestamp: now };
-          try {
-            if (isOnline && db) {
-              await db.ref('injured').child(data.id).set(data);
-            } else {
-              syncQueue.injured.push(data);
-              await saveToIndexedDB('injured', data);
-            }
-            lastInjuredReportTime = now;
-            reportStatus.textContent = isOnline ? 'Injured person reported!' : 'Injured person reported (offline)! Will sync when online.';
-            setTimeout(() => reportStatus.textContent = '', 3000);
-            updateLocalData('injured', data);
-            if (document.getElementById('enableAlertSound')?.checked) {
-              const sound = document.getElementById('injuredSound');
-              if (sound) {
-                sound.play().catch(error => console.error('Audio play error:', error));
-              }
-            }
-          } catch (error) {
-            console.error('Injured report error:', error);
-            reportStatus.textContent = 'Error reporting injured: ' + error.message;
-          }
-        });
-      }
-
-      if (messagesDiv && messageInput && sendBtn) {
-        sendBtn.addEventListener('click', async () => {
-          const text = messageInput.value.trim();
-          if (text) {
-            const timestamp = Date.now();
-            const encryptedText = CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
-            const msgData = { id: 'chat_' + Math.random().toString(36).slice(2), text: encryptedText, timestamp };
-            if (isOnline && db) {
-              db.ref('chat').push({ text: encryptedText, timestamp }).then(() => {
-                messageInput.value = '';
-              });
-            } else {
-              syncQueue.chat.push(msgData);
-              await saveToIndexedDB('chat', msgData);
-              addMessage(text, true);
-              messageInput.value = '';
-            }
-          }
-        });
-      }
-
-      if (db) {
-        firebaseApp.auth().onAuthStateChanged(user => {
-          if (reportPoliceBtn && reportIncidentBtn && reportProtestBtn && reportInjuredBtn) {
-            if ((user || !isOnline) && myMarker) {
-              reportPoliceBtn.disabled = false;
-              reportIncidentBtn.disabled = false;
-              reportProtestBtn.disabled = false;
-              reportInjuredBtn.disabled = false;
-            } else {
-              reportPoliceBtn.disabled = true;
-              reportIncidentBtn.disabled = true;
-              reportProtestBtn.disabled = true;
-              reportInjuredBtn.disabled = true;
-            }
-          }
-        });
-      }
-
-      setTimeout(() => {
-        if (map) {
-          map.invalidateSize();
-          console.log('Map size invalidated after DOM load.');
-        }
-      }, 200);
-    });
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(reg => {
-        console.log('Service Worker registered:', reg);
-      }).catch(error => {
-        console.error('Service Worker registration failed:', error);
-      });
-    }
-  </script>
-</body>
-</html>
+const s=document.createElement('script');
+s.src='https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
+document.head.appendChild(s);
+</script>
+</body></html>
