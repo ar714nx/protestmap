@@ -2,82 +2,97 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>AZADI LIVE WAR ROOM</title>
+  <title>AZADI WAR ROOM — LIVE</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <script src="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.umd.js"></script>
   <link href="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.css" rel="stylesheet"/>
+  <!-- FIREBASE SDK (compat for no modules) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     html,body,#map{width:100%;height:100%;overflow:hidden}
     body{background:#000;color:#fff;font-family:Arial}
-    
+
     #topBanner{
-      position:fixed;top:0;left:0;right:0;z-index:1001;
-      background:#000;padding:12px;text-align:center;font-size:22px;
-      border-bottom:5px solid #0f0;box-shadow:0 0 40px #0f0;
+      position:fixed;top:0;left:0;right:0;z-index:1002;
+      background:#000;padding:10px;text-align:center;font-size:18px;
+      border-bottom:4px solid #0f0;box-shadow:0 0 30px #0f0;color:#0f0;
     }
-    
+
+    #announceBox{
+      position:fixed;top:45px;left:10px;right:10px;z-index:1001;
+      background:rgba(0,0,0,0.9);padding:10px;border-radius:10px;
+      border:2px solid #0ff;box-shadow:0 0 20px #0ff;
+      font-size:15px;max-height:100px;overflow-y:auto;opacity:0;
+      transition:opacity 0.5s;display:none;
+    }
+    .ann-item{
+      display:flex;justify-content:space-between;align-items:center;
+      margin:5px 0;padding:7px;background:rgba(0,255,255,0.1);
+      border-radius:6px;border-left:3px solid #0ff;font-size:14px;
+    }
+    .ann-text{flex:1;}
+    .ann-del{font-size:11px;color:#f00;cursor:pointer;padding:3px 6px;}
+
     #panel{
-      position:fixed;top:60px;left:10px;z-index:1000;
-      background:rgba(0,0,0,0.9);padding:18px;border-radius:18px;
-      display:grid;grid-template-columns:1fr 1fr;gap:12px;
-      border:4px solid #0ff;box-shadow:0 0 60px #0ff;
+      position:fixed;top:50px;left:10px;z-index:1000;
+      background:rgba(0,0,0,0.9);padding:12px;border-radius:14px;
+      display:none;grid-template-columns:1fr 1fr;gap:8px;
+      border:3px solid #0ff;box-shadow:0 0 40px #0ff;
+      font-size:14px;max-width:90vw;
     }
     button{
-      padding:16px 22px;border:none;border-radius:14px;
-      font-weight:bold;font-size:17px;cursor:pointer;
+      padding:10px 14px;border:none;border-radius:10px;
+      font-weight:bold;font-size:14px;cursor:pointer;
     }
     .green{background:#0f0;color:#000}
     .red{background:#f00}
     .gray{background:#444}
     .aqua{background:#0ff;color:#000}
-    .save{background:#0f0;color:#000;grid-column:1/3;font-size:19px}
-    
+    .save{background:#0f0;color:#000;grid-column:1/3;font-size:15px}
     #sizeControl{
-      grid-column:1/3;background:#111;padding:15px;border-radius:14px;
-      border:3px solid #0ff;box-shadow:0 0 40px #0ff;
+      grid-column:1/3;background:#111;padding:10px;border-radius:10px;
+      border:2px solid #0ff;box-shadow:0 0 25px #0ff;
     }
-    #sizeSlider{width:100%;height:14px;appearance:none;background:#222;border-radius:10px;}
+    #sizeValue{font-size:15px;color:#0ff;text-shadow:0 0 15px #0ff;margin-bottom:4px;text-align:center;}
+    #sizeSlider{width:100%;height:10px;appearance:none;background:#222;border-radius:6px;}
     #sizeSlider::-webkit-slider-thumb{
-      appearance:none;width:34px;height:34px;background:#0ff;border-radius:50%;
-      box-shadow:0 0 30px #0ff, 0 0 60px #0ff;cursor:pointer;
+      appearance:none;width:26px;height:26px;background:#0ff;border-radius:50%;
+      box-shadow:0 0 20px #0ff,0 0 40px #0ff;cursor:pointer;
     }
-    #sizeValue{text-align:center;margin-top:8px;font-size:19px;color:#0ff;text-shadow:0 0 20px #0ff;}
-    
+
     #legend{
-      position:fixed;top:170px;right:15px;z-index:1000;
-      background:rgba(0,0,0,0.95);padding:22px 28px;border-radius:20px;
-      border:4px solid #0ff;box-shadow:0 0 60px #0ff;font-weight:bold;
-      font-size:19px;line-height:2.6;backdrop-filter:blur(14px);min-width:220px;
+      position:fixed;top:100px;right:8px;z-index:1000;
+      background:rgba(0,0,0,0.9);padding:8px 10px;border-radius:10px;
+      border:2px solid #0ff;box-shadow:0 0 15px #0ff;
+      font-size:12px;line-height:1.6;min-width:120px;
     }
-    .leg-item{display:flex;align-items:center;gap:16px;margin:8px 0}
-    .leg-ball{
-      width:32px;height:32px;border-radius:50%;border:4px solid #fff;
-      box-shadow:0 0 40px, 0 0 80px;flex-shrink:0;animation:glow 2s infinite;
-    }
-    @keyframes glow{50%{box-shadow:0 0 60px, 0 0 100px}}
-    
+    .leg-item{display:flex;align-items:center;gap:6px;}
+    .leg-ball{width:16px;height:16px;border-radius:50%;border:2px solid #fff;
+      box-shadow:0 0 12px,0 0 25px;animation:glow 2s infinite;}
+    @keyframes glow{50%{box-shadow:0 0 20px,0 0 40px}}
+
     #status{
-      position:fixed;bottom:15px;left:15px;background:rgba(0,0,0,0.9);
-      padding:16px 28px;border-radius:16px;font-size:18px;
-      border:3px solid #0f0;box-shadow:0 0 40px #0f0;text-shadow:0 0 15px #0f0;
+      position:fixed;bottom:10px;left:10px;background:rgba(0,0,0,0.9);
+      padding:8px 14px;border-radius:10px;font-size:14px;
+      border:2px solid #0f0;box-shadow:0 0 20px #0f0;
     }
-    
-    .ball{
-      border-radius:50%;transition:all 0.3s ease;animation:pulse 1.5s infinite;
-    }
-    @keyframes pulse{50%{box-shadow:0 0 90px}}
-    .g{background:#0f0;box-shadow:0 0 50px #0f0}
-    .r{background:#f00;box-shadow:0 0 50px #f00}
+
+    .ball{border-radius:50%;transition:all 0.3s;animation:pulse 1.5s infinite;}
+    @keyframes pulse{50%{box-shadow:0 0 60px}}
+    .g{background:#0f0;box-shadow:0 0 35px #0f0}
+    .r{background:#f00;box-shadow:0 0 35px #f00}
   </style>
 </head>
 <body>
 
-<div id="topBanner">AZADI LIVE WAR ROOM — <span id="modeText">WATCH ONLY</span></div>
+<div id="topBanner">AZADI LIVE — <span id="modeText">WATCHING</span></div>
 <div id="map"></div>
 
-<!-- ADMIN PANEL (HIDDEN BY DEFAULT) -->
-<div id="panel" style="display:none;">
+<div id="announceBox"></div>
+
+<div id="panel">
   <button class="green" id="addG">+ PROTESTORS</button>
   <button class="red" id="addR">+ FORCES</button>
   <button class="gray" id="del">DELETE</button>
@@ -91,19 +106,36 @@
   
   <button class="save" id="save">BROADCAST LIVE</button>
   <button class="gray" id="clear">CLEAR ALL</button>
+  <button id="announceBtn" style="grid-column:1/3;background:#0ff;color:#000;font-size:14px;">+ ANNOUNCEMENT</button>
 </div>
 
-<!-- LEGEND ALWAYS VISIBLE -->
 <div id="legend">
   <div class="leg-item"><div class="leg-ball" style="background:#0f0"></div> PROTESTORS</div>
   <div class="leg-item"><div class="leg-ball" style="background:#f00"></div> FORCES</div>
-  <div class="leg-item"><div class="leg-ball" style="background:#ff8400"></div> CLASH ZONE</div>
-  <div class="leg-item"><div class="leg-ball" style="background:#0ff"></div> D-CHOWK HQ</div>
+  <div class="leg-item"><div class="leg-ball" style="background:#ff8400"></div> CLASH</div>
+  <div class="leg-item"><div class="leg-ball" style="background:#0ff"></div> HQ</div>
 </div>
 
-<div id="status">ENTER PASSWORD TO CONTROL</div>
+<div id="status">LOADING LIVE DATA...</div>
 
 <script>
+// === YOUR REAL FIREBASE CONFIG ===
+const firebaseConfig = {
+  apiKey: "AIzaSyC0j16N6WKYbYGipY5MJeFblmyHbfQxhMc",
+  authDomain: "protest2025-2437d.firebaseapp.com",
+  databaseURL: "https://protest2025-2437d-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "protest2025-2437d",
+  storageBucket: "protest2025-2437d.firebasestorage.app",
+  messagingSenderId: "987145763427",
+  appId: "1:987145763427:web:109550b1fe70c5b7505656",
+  measurementId: "G-960T1YLV12"
+};
+// ===================================
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const warRoomRef = db.ref('warRoom');
+
 maptilersdk.config.apiKey = 'DBC5HbIkYq5Exj1DeUXm';
 const map = new maptilersdk.Map({
   container: 'map',
@@ -113,50 +145,47 @@ const map = new maptilersdk.Map({
 });
 
 let balls = [], mode = null, dVisible = false, ballSize = 50;
-let isAdmin = false;
+let isAdmin = false, announcements = [];
 const GROUP_SIZE = 4;
 const ADMIN_PASSWORD = "AZADI2025";
-const STORAGE_KEY = "AZADI_WAR_LIVE";
 
-// ASK FOR PASSWORD ONCE
+// PASSWORD PROMPT
 setTimeout(() => {
-  const pass = prompt("ENTER ADMIN PASSWORD (or cancel to watch):");
+  const pass = prompt("ADMIN PASSWORD (or cancel to watch):");
   if (pass === ADMIN_PASSWORD) {
     isAdmin = true;
     document.getElementById('panel').style.display = 'grid';
     document.getElementById('topBanner').innerHTML = "ADMIN MODE — FULL CONTROL";
     document.getElementById('modeText').style.color = "#0f0";
-    document.getElementById('status').innerHTML = "ADMIN LOGGED IN — YOU CONTROL THE WAR";
+    document.getElementById('status').innerHTML = "YOU ARE IN COMMAND";
   } else {
-    document.getElementById('status').innerHTML = "WATCH-ONLY MODE — LIVE UPDATES EVERY 5 SEC";
+    document.getElementById('status').innerHTML = "LIVE VIEW — REAL-TIME";
   }
 }, 500);
 
-// MAP SETUP
 map.on('load', () => {
-  // RED BORDER
   map.addSource('ict', {type:'geojson', data: {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[72.855,33.495],[73.255,33.495],[73.255,33.815],[72.855,33.815],[72.855,33.495]]]}}});
-  map.addLayer({id:'border',type:'line',source:'ict',paint:{'line-color':'#f00','line-width':10}});
+  map.addLayer({id:'border',type:'line',source:'ict',paint:{'line-color':'#f00','line-width':8}});
 
-  // ZONES
   ['green','red','orange'].forEach(c => {
     map.addSource(c, {type:'geojson', data:{type:'FeatureCollection',features:[]}});
     map.addLayer({id:c,type:'fill',source:c,paint:{'fill-color':c==='green'?'#0f0':c==='red'?'#f00':'#ff8400','fill-opacity':0.25}});
   });
 
-  // D-CHOWK
-  const dchowk = {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.0900,33.7315],[73.0915,33.7318],[73.0928,33.7319],[73.0942,33.7317],[73.0958,33.7312],[73.0965,33.7305],[73.0968,33.7295],[73.0965,33.7285],[73.0958,33.7278],[73.0945,33.7273],[73.0928,33.7271],[73.0912,33.7272],[73.0900,33.7275],[73.0895,33.7282],[73.0893,33.7290],[73.0895,33.7300],[73.0898,33.7308],[73.0900,33.7315]]]}};
-  map.addSource('dchowk', {type:'geojson', data:dchowk});
-  map.addLayer({id:'d-outline',type:'line',source:'dchowk',paint:{'line-color':'#0ff','line-width':8}});
+  const d = {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.0900,33.7315],[73.0915,33.7318],[73.0928,33.7319],[73.0942,33.7317],[73.0958,33.7312],[73.0965,33.7305],[73.0968,33.7295],[73.0965,33.7285],[73.0958,33.7278],[73.0945,33.7273],[73.0928,33.7271],[73.0912,33.7272],[73.0900,33.7275],[73.0895,33.7282],[73.0893,33.7290],[73.0895,33.7300],[73.0898,33.7308],[73.0900,33.7315]]]}};
+  map.addSource('dchowk', {type:'geojson', data:d});
+  map.addLayer({id:'d-outline',type:'line',source:'dchowk',paint:{'line-color':'#0ff','line-width':6}});
   map.addLayer({id:'d-fill',type:'fill',source:'dchowk',paint:{'fill-color':'#0ff','fill-opacity':0.1}});
   ['d-outline','d-fill'].forEach(l => map.setLayoutProperty(l,'visibility','none'));
 
-  // TURF
   const t = document.createElement('script');
   t.src = 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
   t.onload = () => {
-    loadData();
-    setInterval(loadData, 5000); // AUTO REFRESH FOR VIEWERS
+    loadFromFirebase(); // Initial load
+    warRoomRef.on('value', snapshot => {
+      const data = snapshot.val();
+      if (data) loadFromFirebase(data);
+    });
   };
   document.head.appendChild(t);
 });
@@ -165,27 +194,23 @@ function placeBall(lng, lat, type) {
   const el = document.createElement('div');
   el.className = `ball ${type==='green'?'g':'r'}`;
   setBallSize(el, ballSize);
-  
   const m = new maptilersdk.Marker({element: el, draggable: isAdmin})
     .setLngLat([lng, lat]).addTo(map);
   m.type = type;
   m.el = el;
-  
   if (isAdmin) {
-    m.getElement().onclick = () => { 
-      if(mode==='del'){ m.remove(); balls = balls.filter(x=>x!==m); broadcast(); }
-    };
+    m.getElement().onclick = () => { if(mode==='del') { m.remove(); balls = balls.filter(x=>x!==m); broadcast(); }};
     m.on('dragend', broadcast);
   }
   balls.push(m);
 }
 
 function setBallSize(el, size) {
-  const px = Math.max(8, 8 + (size * 1.4));
+  const px = Math.max(6, 6 + (size * 1.2));
   el.style.width = el.style.height = px + 'px';
   el.style.opacity = size > 0 ? '1' : '0';
   el.style.boxShadow = size > 0 
-    ? (el.classList.contains('g') ? `0 0 ${30 + size}px #0f0` : `0 0 ${30 + size}px #f00`)
+    ? (el.classList.contains('g') ? `0 0 ${25 + size}px #0f0` : `0 0 ${25 + size}px #f00`)
     : 'none';
 }
 
@@ -196,62 +221,66 @@ function updateAllBallSizes() {
 function updateZones() {
   const greens = balls.filter(b=>b.type==='green');
   const reds = balls.filter(b=>b.type==='red');
-  const greenGroups = chunkArray(greens, GROUP_SIZE);
-  const redGroups = chunkArray(reds, GROUP_SIZE);
-  const greenHulls = greenGroups.map(g => makeHull(g)).filter(Boolean);
-  const redHulls = redGroups.map(g => makeHull(g)).filter(Boolean);
+  const greenGroups = chunk(greens);
+  const redGroups = chunk(reds);
+  const zones = [];
 
-  map.getSource('green').setData({type:'FeatureCollection', features: greenHulls});
-  map.getSource('red').setData({type:'FeatureCollection', features: redHulls});
-
-  const clashes = [];
-  greenHulls.forEach(g => redHulls.forEach(r => {
-    const inter = turf.intersect(g, r);
-    if (inter) clashes.push(inter);
+  greenGroups.forEach(g => { const h=makeHull(g); if(h){h.properties={color:'green'}; zones.push(h);} });
+  redGroups.forEach(r => { const h=makeHull(r); if(h){h.properties={color:'red'}; zones.push(h);} });
+  greenGroups.forEach(g => redGroups.forEach(r => {
+    const i = turf.intersect(makeHull(g), makeHull(r));
+    if(i){i.properties={color:'orange'}; zones.push(i);}
   }));
-  map.getSource('orange').setData({type:'FeatureCollection', features: clashes});
+
+  ['green','red','orange'].forEach(c => {
+    map.getSource(c).setData({type:'FeatureCollection', features: zones.filter(z=>z.properties.color===c)});
+  });
 }
 
-function chunkArray(arr, size) {
-  const chunks = [];
-  for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
-  return chunks;
+function chunk(arr) {
+  const res = [];
+  for (let i = 0; i < arr.length; i += GROUP_SIZE) res.push(arr.slice(i, i + GROUP_SIZE));
+  return res;
 }
 
 function makeHull(group) {
   if (group.length < 2) return null;
-  const pts = group.map(b => turf.point([b.getLngLat().lng, b.getLngLat().lat]));
-  return turf.convex(turf.featureCollection(pts));
+  return turf.convex(turf.featureCollection(group.map(b=>turf.point([b.getLngLat().lng, b.getLngLat().lat]))));
 }
 
+// BROADCAST TO FIREBASE (ADMIN ONLY)
 function broadcast() {
   if (!isAdmin) return;
   const data = {
-    balls: balls.map(b => ({lng: b.getLngLat().lng, lat: b.getLngLat().lat, type: b.type})),
+    balls: balls.map(b=>({lng:b.getLngLat().lng, lat:b.getLngLat().lat, type:b.type})),
     size: ballSize,
-    dVisible: dVisible,
+    dVisible,
+    announcements,
     timestamp: Date.now()
   };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  document.getElementById('status').innerHTML = `BROADCAST LIVE — ${balls.length} UNITS`;
+  warRoomRef.set(data).then(() => {
+    document.getElementById('status').innerHTML = `LIVE — ${balls.length} UNITS`;
+  }).catch(err => {
+    console.error("Broadcast failed:", err);
+    alert("Sync failed! Check internet.");
+  });
 }
 
-function loadData() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return;
-
-  const data = JSON.parse(saved);
-  
-  // CLEAR OLD BALLS
+// LOAD FROM FIREBASE (EVERYONE)
+function loadFromFirebase(data) {
   balls.forEach(b => b.remove());
   balls = [];
 
-  // REBUILD
+  if (!data) {
+    document.getElementById('status').innerHTML = "NO DATA YET";
+    return;
+  }
+
   data.balls.forEach(b => placeBall(b.lng, b.lat, b.type));
   ballSize = data.size || 50;
   dVisible = data.dVisible || false;
+  announcements = data.announcements || [];
 
-  // UPDATE UI
   if (isAdmin) {
     document.getElementById('sizeSlider').value = ballSize;
     document.getElementById('sizeValue').innerHTML = `BALL SIZE: ${ballSize}`;
@@ -259,15 +288,36 @@ function loadData() {
   updateAllBallSizes();
   updateZones();
 
-  // D-CHOWK
-  const vis = dVisible ? 'visible' : 'none';
-  ['d-outline','d-fill'].forEach(l => {
-    if (map.getLayer(l)) map.setLayoutProperty(l, 'visibility', vis);
-  });
+  ['d-outline','d-fill'].forEach(l => map.setLayoutProperty(l,'visibility', dVisible?'visible':'none'));
+  showAnnouncements();
 
   if (!isAdmin) {
-    document.getElementById('status').innerHTML = `LIVE: ${data.balls.length} UNITS | SIZE ${ballSize}`;
+    document.getElementById('status').innerHTML = `LIVE: ${data.balls.length} UNITS`;
   }
+}
+
+function showAnnouncements() {
+  const box = document.getElementById('announceBox');
+  if (announcements.length === 0) {
+    box.style.display = 'none'; box.style.opacity = 0;
+    return;
+  }
+  box.innerHTML = '';
+  announcements.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'ann-item';
+    div.innerHTML = `<div class="ann-text">${a}</div>`;
+    if (isAdmin) {
+      const del = document.createElement('div');
+      del.className = 'ann-del';
+      del.textContent = 'X';
+      del.onclick = () => { announcements.splice(i,1); broadcast(); };
+      div.appendChild(del);
+    }
+    box.appendChild(div);
+  });
+  box.style.display = 'block';
+  setTimeout(() => box.style.opacity = 1, 100);
 }
 
 // ADMIN CONTROLS
@@ -278,7 +328,7 @@ document.getElementById('move').onclick = () => {
   if(!isAdmin) return;
   const on = document.getElementById('move').textContent.includes('OFF');
   document.getElementById('move').textContent = on ? 'MOVE ON' : 'MOVE OFF';
-  balls.forEach(b => b.setDraggable(on));
+  balls.forEach(b=>b.setDraggable(on));
 };
 document.getElementById('dchowk').onclick = () => {
   if(!isAdmin) return;
@@ -288,20 +338,26 @@ document.getElementById('dchowk').onclick = () => {
 };
 document.getElementById('sizeSlider').oninput = function() {
   if(!isAdmin) return;
-  ballSize = parseInt(this.value);
+  ballSize = this.value;
   document.getElementById('sizeValue').innerHTML = `BALL SIZE: ${ballSize}`;
   updateAllBallSizes();
   broadcast();
 };
 document.getElementById('save').onclick = broadcast;
 document.getElementById('clear').onclick = () => {
+  if(!isAdmin || !confirm('ERASE ALL?')) return;
+  balls.forEach(b=>b.remove()); balls=[]; announcements=[];
+  warRoomRef.remove().then(() => {
+    document.getElementById('status').innerHTML = "CLEARED";
+  });
+};
+
+document.getElementById('announceBtn').onclick = () => {
   if(!isAdmin) return;
-  if(confirm('ERASE ALL?')) {
-    balls.forEach(b=>b.remove()); balls=[]; updateZones();
-    localStorage.removeItem(STORAGE_KEY);
-    ballSize = 50;
-    document.getElementById('sizeSlider').value = 50;
-    document.getElementById('sizeValue').innerHTML = 'BALL SIZE: 50';
+  const msg = prompt("ANNOUNCEMENT:");
+  if(msg && msg.trim()) {
+    announcements.unshift(msg.trim());
+    if(announcements.length > 8) announcements.pop();
     broadcast();
   }
 };
