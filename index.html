@@ -20,45 +20,47 @@
     }
 
     #announceBox{
-      position:fixed;top:45px;left:10px;right:10px;z-index:1001;
-      background:rgba(0,0,0,0.9);padding:10px;border-radius:10px;
-      border:2px solid #0ff;box-shadow:0 0 20px #0ff;
-      font-size:15px;max-height:100px;overflow-y:auto;opacity:0;
-      transition:opacity 0.5s;display:none;
+      position:fixed;top:52px;left:10px;right:10px;z-index:1001;
+      background:rgba(0,0,0,0.92);padding:8px 10px;border-radius:10px;
+      border:2px solid #0ff;box-shadow:0 0 18px #0ff;
+      font-size:14px;max-height:75px;overflow-y:auto;opacity:0;
+      transition:opacity 0.5s;display:none;line-height:1.4;
     }
     .ann-item{
       display:flex;justify-content:space-between;align-items:center;
-      margin:5px 0;padding:7px;background:rgba(0,255,255,0.1);
-      border-radius:6px;border-left:3px solid #0ff;font-size:14px;
+      margin:4px 0;padding:6px;background:rgba(0,255,255,0.12);
+      border-radius:6px;border-left:3px solid #0ff;font-size:13px;
     }
-    .ann-text{flex:1;}
-    .ann-del{font-size:11px;color:#f00;cursor:pointer;padding:3px 6px;}
+    .ann-del{
+      font-size:10px;color:#f00;cursor:pointer;padding:2px 5px;
+      background:rgba(255,0,0,0.2);border-radius:4px;margin-left:8px;
+    }
 
     #panel{
-      position:fixed;top:50px;left:10px;z-index:1000;
-      background:rgba(0,0,0,0.9);padding:12px;border-radius:14px;
-      display:none;grid-template-columns:1fr 1fr;gap:8px;
-      border:3px solid #0ff;box-shadow:0 0 40px #0ff;
+      position:fixed;top:100px;left:10px;z-index:1000;
+      background:rgba(0,0,0,0.92);padding:14px;border-radius:16px;
+      display:none;grid-template-columns:1fr 1fr;gap:10px;
+      border:3px solid #0ff;box-shadow:0 0 45px #0ff;
       font-size:14px;max-width:90vw;
     }
     button{
-      padding:10px 14px;border:none;border-radius:10px;
+      padding:11px 15px;border:none;border-radius:12px;
       font-weight:bold;font-size:14px;cursor:pointer;
     }
     .green{background:#0f0;color:#000}
     .red{background:#f00}
     .gray{background:#444}
     .aqua{background:#0ff;color:#000}
-    .save{background:#0f0;color:#000;grid-column:1/3;font-size:15px}
+    .save{background:#0f0;color:#000;grid-column:1/3;font-size:16px}
     #sizeControl{
-      grid-column:1/3;background:#111;padding:10px;border-radius:10px;
+      grid-column:1/3;background:#111;padding:12px;border-radius:12px;
       border:2px solid #0ff;box-shadow:0 0 25px #0ff;
     }
-    #sizeValue{font-size:15px;color:#0ff;text-shadow:0 0 15px #0ff;margin-bottom:4px;text-align:center;}
+    #sizeValue{font-size:15px;color:#0ff;text-shadow:0 0 15px #0ff;margin-bottom:5px;text-align:center;}
     #sizeSlider{width:100%;height:10px;appearance:none;background:#222;border-radius:6px;}
     #sizeSlider::-webkit-slider-thumb{
-      appearance:none;width:26px;height:26px;background:#0ff;border-radius:50%;
-      box-shadow:0 0 20px #0ff,0 0 40px #0ff;cursor:pointer;
+      appearance:none;width:28px;height:28px;background:#0ff;border-radius:50%;
+      box-shadow:0 0 22px #0ff,0 0 44px #0ff;cursor:pointer;
     }
 
     #legend{
@@ -83,21 +85,11 @@
     .g{background:#0f0;box-shadow:0 0 35px #0f0}
     .r{background:#f00;box-shadow:0 0 35px #f00}
 
-    /* D-CHOWK LABEL */
     #dchowkLabel{
-      position: absolute;
-      background: rgba(0,255,255,0.2);
-      color: #0ff;
-      font-weight: bold;
-      font-size: 14px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 2px solid #0ff;
-      box-shadow: 0 0 20px #0ff;
-      pointer-events: none;
-      z-index: 999;
-      display: none;
-      text-shadow: 0 0 10px #000;
+      position:absolute;background:rgba(0,255,255,0.3);color:#0ff;
+      font-weight:bold;font-size:16px;padding:8px 14px;border-radius:10px;
+      border:3px solid #0ff;box-shadow:0 0 25px #0ff,inset 0 0 15px rgba(0,255,255,0.3);
+      pointer-events:none;z-index:999;display:none;text-shadow:0 0 12px #000;letter-spacing:1px;
     }
   </style>
 </head>
@@ -125,7 +117,6 @@
   <button id="announceBtn" style="grid-column:1/3;background:#0ff;color:#000;font-size:14px;">+ ANNOUNCEMENT</button>
 </div>
 
-<!-- LEGEND — D-CHOWK FIXED -->
 <div id="legend">
   <div class="leg-item"><div class="leg-ball" style="background:#0f0"></div> PROTESTORS</div>
   <div class="leg-item"><div class="leg-ball" style="background:#f00"></div> FORCES</div>
@@ -134,12 +125,10 @@
 </div>
 
 <div id="status">LOADING LIVE DATA...</div>
-
-<!-- D-CHOWK LABEL (SHOWS WHEN ENABLED) -->
 <div id="dchowkLabel">D-CHOWK</div>
 
 <script>
-// === YOUR REAL FIREBASE CONFIG ===
+// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyC0j16N6WKYbYGipY5MJeFblmyHbfQxhMc",
   authDomain: "protest2025-2437d.firebaseapp.com",
@@ -168,7 +157,7 @@ let isAdmin = false, announcements = [];
 const GROUP_SIZE = 4;
 const ADMIN_PASSWORD = "AZADI2025";
 
-// PASSWORD PROMPT
+// PASSWORD
 setTimeout(() => {
   const pass = prompt("ADMIN PASSWORD (or cancel to watch):");
   if (pass === ADMIN_PASSWORD) {
@@ -182,47 +171,47 @@ setTimeout(() => {
   }
 }, 500);
 
+// D-CHOWK LABEL UPDATE FUNCTION
+function updateDchowkLabel() {
+  const label = document.getElementById('dchowkLabel');
+  if (!dVisible) {
+    label.style.display = 'none';
+    return;
+  }
+  const p = map.project([73.093, 33.7295]);
+  label.style.left = (p.x - 60) + 'px';
+  label.style.top = (p.y - 25) + 'px';
+  label.style.display = 'block';
+}
+
 map.on('load', () => {
-  // RED BORDER
   map.addSource('ict', {type:'geojson', data: {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[72.855,33.495],[73.255,33.495],[73.255,33.815],[72.855,33.815],[72.855,33.495]]]}}});
   map.addLayer({id:'border',type:'line',source:'ict',paint:{'line-color':'#f00','line-width':8}});
 
-  // ZONES
   ['green','red','orange'].forEach(c => {
     map.addSource(c, {type:'geojson', data:{type:'FeatureCollection',features:[]}});
     map.addLayer({id:c,type:'fill',source:c,paint:{'fill-color':c==='green'?'#0f0':c==='red'?'#f00':'#ff8400','fill-opacity':0.25}});
   });
 
-  // D-CHOWK
   const d = {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.0900,33.7315],[73.0915,33.7318],[73.0928,33.7319],[73.0942,33.7317],[73.0958,33.7312],[73.0965,33.7305],[73.0968,33.7295],[73.0965,33.7285],[73.0958,33.7278],[73.0945,33.7273],[73.0928,33.7271],[73.0912,33.7272],[73.0900,33.7275],[73.0895,33.7282],[73.0893,33.7290],[73.0895,33.7300],[73.0898,33.7308],[73.0900,33.7315]]]}};
   map.addSource('dchowk', {type:'geojson', data:d});
-  map.addLayer({id:'d-outline',type:'line',source:'dchowk',paint:{'line-color':'#0ff','line-width':6}});
-  map.addLayer({id:'d-fill',type:'fill',source:'dchowk',paint:{'fill-color':'#0ff','fill-opacity':0.1}});
+  map.addLayer({id:'d-outline',type:'line',source:'dchowk',paint:{'line-color':'#0ff','line-width':7}});
+  map.addLayer({id:'d-fill',type:'fill',source:'dchowk',paint:{'fill-color':'#0ff','fill-opacity':0.15}});
   ['d-outline','d-fill'].forEach(l => map.setLayoutProperty(l,'visibility','none'));
 
-  // D-CHOWK LABEL (CENTER OF POLYGON)
-  const center = [73.093, 33.7295]; // Approximate center
-  const label = document.getElementById('dchowkLabel');
-  map.on('move', () => {
-    if (!dVisible) return;
-    const point = map.project(center);
-    label.style.left = (point.x - 50) + 'px';
-    label.style.top = (point.y - 20) + 'px';
-    label.style.display = 'block';
-  });
+  map.on('move', updateDchowkLabel);
+  map.on('zoom', updateDchowkLabel);
 
   const t = document.createElement('script');
   t.src = 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
   t.onload = () => {
     loadFromFirebase();
-    warRoomRef.on('value', snapshot => {
-      const data = snapshot.val();
-      if (data) loadFromFirebase(data);
-    });
+    warRoomRef.on('value', s => { const d = s.val(); if (d) loadFromFirebase(d); });
   };
   document.head.appendChild(t);
 });
 
+// BALL FUNCTIONS
 function placeBall(lng, lat, type) {
   const el = document.createElement('div');
   el.className = `ball ${type==='green'?'g':'r'}`;
@@ -247,9 +236,7 @@ function setBallSize(el, size) {
     : 'none';
 }
 
-function updateAllBallSizes() {
-  balls.forEach(m => setBallSize(m.el, ballSize));
-}
+function updateAllBallSizes() { balls.forEach(m => setBallSize(m.el, ballSize)); }
 
 function updateZones() {
   const greens = balls.filter(b=>b.type==='green');
@@ -281,6 +268,7 @@ function makeHull(group) {
   return turf.convex(turf.featureCollection(group.map(b=>turf.point([b.getLngLat().lng, b.getLngLat().lat]))));
 }
 
+// BROADCAST & LOAD
 function broadcast() {
   if (!isAdmin) return;
   const data = {
@@ -292,20 +280,12 @@ function broadcast() {
   };
   warRoomRef.set(data).then(() => {
     document.getElementById('status').innerHTML = `LIVE — ${balls.length} UNITS`;
-  }).catch(err => {
-    console.error("Broadcast failed:", err);
-    alert("Sync failed! Check internet.");
-  });
+  }).catch(() => alert("Sync failed! Check internet or Firebase rules."));
 }
 
 function loadFromFirebase(data) {
-  balls.forEach(b => b.remove());
-  balls = [];
-
-  if (!data) {
-    document.getElementById('status').innerHTML = "NO DATA YET";
-    return;
-  }
+  balls.forEach(b => b.remove()); balls = [];
+  if (!data) { document.getElementById('status').innerHTML = "NO DATA YET"; return; }
 
   data.balls.forEach(b => placeBall(b.lng, b.lat, b.type));
   ballSize = data.size || 50;
@@ -319,30 +299,26 @@ function loadFromFirebase(data) {
   updateAllBallSizes();
   updateZones();
 
-  // SHOW/HIDE D-CHOWK + LABEL
-  ['d-outline','d-fill'].forEach(l => map.setLayoutProperty(l,'visibility', dVisible?'visible':'none'));
-  const label = document.getElementById('dchowkLabel');
-  label.style.display = dVisible ? 'block' : 'none';
-  if (dVisible) {
-    const point = map.project([73.093, 33.7295]);
-    label.style.left = (point.x - 50) + 'px';
-    label.style.top = (point.y - 20) + 'px';
-  }
+  // D-CHOWK VISIBILITY
+  const vis = dVisible ? 'visible' : 'none';
+  ['d-outline','d-fill'].forEach(l => map.setLayoutProperty(l,'visibility', vis));
+  updateDchowkLabel();  // FIXED: NOW CALLS THE FUNCTION
 
-  showAnnouncements();
+  showAnnouncements();  // FIXED: ALWAYS REFRESH ANNOUNCEMENTS
 
-  if (!isAdmin) {
-    document.getElementById('status').innerHTML = `LIVE: ${data.balls.length} UNITS`;
-  }
+  if (!isAdmin) document.getElementById('status').innerHTML = `LIVE: ${data.balls.length} UNITS`;
 }
 
+// ANNOUNCEMENTS — NOW FULLY WORKING
 function showAnnouncements() {
   const box = document.getElementById('announceBox');
+  box.innerHTML = '';
   if (announcements.length === 0) {
-    box.style.display = 'none'; box.style.opacity = 0;
+    box.style.display = 'none';
+    box.style.opacity = 0;
     return;
   }
-  box.innerHTML = '';
+
   announcements.forEach((a, i) => {
     const div = document.createElement('div');
     div.className = 'ann-item';
@@ -351,13 +327,18 @@ function showAnnouncements() {
       const del = document.createElement('div');
       del.className = 'ann-del';
       del.textContent = 'X';
-      del.onclick = () => { announcements.splice(i,1); broadcast(); };
+      del.onclick = () => {
+        announcements.splice(i, 1);
+        broadcast();
+        showAnnouncements();  // Refresh instantly
+      };
       div.appendChild(del);
     }
     box.appendChild(div);
   });
+
   box.style.display = 'block';
-  setTimeout(() => box.style.opacity = 1, 100);
+  setTimeout(() => box.style.opacity = 1, 50);
 }
 
 // ADMIN CONTROLS
@@ -387,9 +368,7 @@ document.getElementById('save').onclick = broadcast;
 document.getElementById('clear').onclick = () => {
   if(!isAdmin || !confirm('ERASE ALL?')) return;
   balls.forEach(b=>b.remove()); balls=[]; announcements=[];
-  warRoomRef.remove().then(() => {
-    document.getElementById('status').innerHTML = "CLEARED";
-  });
+  warRoomRef.remove().then(() => document.getElementById('status').innerHTML = "CLEARED");
 };
 document.getElementById('announceBtn').onclick = () => {
   if(!isAdmin) return;
@@ -398,6 +377,7 @@ document.getElementById('announceBtn').onclick = () => {
     announcements.unshift(msg.trim());
     if(announcements.length > 8) announcements.pop();
     broadcast();
+    showAnnouncements();  // Show instantly
   }
 };
 
